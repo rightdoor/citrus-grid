@@ -7,7 +7,7 @@ export const siteConfig = {
   url: config.url || 'https://citrusgrid.pages.dev',
   title: config.title || 'CitrusGrid',
   subtitle: config.subtitle || 'A pure static Astro blog theme',
-  description: config.description || '这是一个基于 Astro 架构和 CitrusGrid主题 的轻量级静态博客。',
+  description: config.description || '这是一个基于 Astro 架构和 CitrusGrid主题的轻量级静态博客。',
   author: config.author || 'RightDoor',
   avatar: config.avatar || '/avatar.webp',
   logo: config.logo || '/logo.webp',
