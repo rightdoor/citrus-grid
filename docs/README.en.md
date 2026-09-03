@@ -21,6 +21,11 @@
   </tr>
 
   <tr>
+    <td align="center"><img src="./dark-post.webp" alt="Dark Mode Post"><br>Dark Mode Post</td>
+    <td align="center"><img src="./light-post.webp" alt="Light Mode Post"><br>Light Mode Post</td>
+  </tr>
+
+  <tr>
     <th colspan="2" align="center">PageSpeed Insights Performance Test</th>
   </tr>
   <tr>
@@ -66,7 +71,7 @@ pnpm preview
 
 ## Configuration
 
-For detailed settings, please refer to the config file [config.yaml](src/config.yaml). Preset configurations are available in `src/lib/siteConfig.ts`.
+For detailed settings, please refer to the config file [config.yaml](../src/config.yaml). Preset configurations are available in `src/lib/siteConfig.ts`.
 
 ## Post Frontmatter
 
@@ -104,8 +109,8 @@ Supports global and per‑post PV/UV statistics, with reserved API.
 
 The bundled statistics plugin is `visitor-stats.ts` (project: [visitor-stats](https://github.com/rightdoor/visitor-stats)). You need to deploy the statistics service on Cloudflare Worker yourself.
 
-Custom statistics plugins are also supported; please refer to [Statistics Plugin](src/stats/使用规则.md) for details.
+Custom statistics plugins are also supported; please refer to [Statistics Plugin](../src/stats/usageRules.md) for details.
 
 ## License
 
-This project is open-sourced under the [MIT License](LICENSE.txt). For detailed terms, please refer to the `LICENSE.txt` file in the project root directory.
+This project is open-sourced under the [MIT License](../LICENSE.txt). For detailed terms, please refer to the `LICENSE.txt` file in the project root directory.

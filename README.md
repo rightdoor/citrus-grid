@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Astro-%3E%3D7.2.9-brightgreen" alt="Astro Version">
   <img src="https://img.shields.io/github/license/rightdoor/citrus-grid" alt="GitHub License">
   <br>
-  <a href="https://citrusgrid.pages.dev">Demo</a> | <a href="./docs/README.en.md">英文</a> | <a href="./docs/README.ja.md">日本語</a>
+  <a href="https://citrusgrid.pages.dev">Demo</a> | <a href="./docs/README.en.md">English</a> | <a href="./docs/README.ja.md">日本語</a>
 </div>
 
 ---
@@ -18,6 +18,11 @@
   <tr>
     <td align="center"><img src="./docs/dark.webp" alt="暗夜模式"><br>暗夜模式</td>
     <td align="center"><img src="./docs/light.webp" alt="白天模式"><br>白天模式</td>
+  </tr>
+
+  <tr>
+    <td align="center"><img src="./docs/dark-post.webp" alt="暗夜模式"><br>暗夜模式文章</td>
+    <td align="center"><img src="./docs/light-post.webp" alt="白天模式"><br>白天模式文章</td>
   </tr>
 
   <tr>

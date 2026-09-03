@@ -21,6 +21,11 @@
   </tr>
 
   <tr>
+    <td align="center"><img src="./dark-post.webp" alt="ダークモードの記事"><br>ダークモードの記事</td>
+    <td align="center"><img src="./light-post.webp" alt="ライトモードの記事"><br>ライトモードの記事</td>
+  </tr>
+
+  <tr>
     <th colspan="2" align="center">PageSpeed Insights パフォーマンステスト</th>
   </tr>
   <tr>
@@ -66,7 +71,7 @@ pnpm preview
 
 ## 設定
 
-詳細は設定ファイル [config.yaml](src/config.yaml) を参照してください。デフォルト設定は `src/lib/siteConfig.ts` にあります。
+詳細は設定ファイル [config.yaml](../src/config.yaml) を参照してください。デフォルト設定は `src/lib/siteConfig.ts` にあります。
 
 ## 記事の Frontmatter
 
@@ -104,8 +109,8 @@ pnpm preview
 
 付属の統計プラグインは `visitor-stats.ts`（プロジェクト: [visitor-stats](https://github.com/rightdoor/visitor-stats)）です。Cloudflare Worker に統計サービスを自前でデプロイする必要があります。
 
-カスタム統計プラグインもサポートしています。詳細は [統計プラグイン](src/stats/使用規則.md) を参照してください。
+カスタム統計プラグインもサポートしています。詳細は [統計プラグイン](../src/stats/usageRules.md) を参照してください。
 
 ## ライセンス
 
-このプロジェクトは [MIT License](LICENSE.txt) の下でオープンソース化されています。詳細な条項については、プロジェクトのルートディレクトリにある `LICENSE.txt` ファイルをご参照ください。
+このプロジェクトは [MIT License](../LICENSE.txt) の下でオープンソース化されています。詳細な条項については、プロジェクトのルートディレクトリにある `LICENSE.txt` ファイルをご参照ください。
