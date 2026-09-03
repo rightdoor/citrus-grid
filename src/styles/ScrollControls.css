@@ -1,0 +1,40 @@
+.scroll-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--wp-border-light);
+  border-radius: var(--radius-wp);
+  background: var(--wp-surface);
+  color: var(--wp-text-secondary);
+  font-size: 1.1rem;
+  box-shadow: var(--wp-shadow-card);
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s;
+  cursor: pointer;
+}
+.scroll-control-btn:hover {
+  color: var(--wp-accent);
+  border-color: var(--wp-accent);
+  background: var(--wp-surface);
+  transform: translateY(-1px);
+}
+.scroll-control-btn:active {
+  transform: scale(0.88);
+  transition-duration: 0.08s;
+}
+@media (max-width: 768px) {
+  .scroll-control-btn {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+}
+@media (min-width: 1280px) {
+  .toc-btn {
+    display: none;
+  }
+}

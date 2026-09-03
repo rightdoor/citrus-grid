@@ -1,0 +1,595 @@
+---
+import { render } from 'astro:content'
+import 'katex/dist/katex.min.css'
+import 'photoswipe/style.css'
+import '@/styles/PostPage.css'
+import Icon from '@/components/Icon.astro'
+import Utterances from '@/components/Utterances.astro'
+import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
+import {
+  mdiAccountOutline,
+  mdiCalendarOutline,
+  mdiClockOutline,
+  mdiClose,
+  mdiEye,
+  mdiFolderOutline,
+  mdiTextRecognition,
+  mdiUpdate,
+} from '@/lib/icons'
+import { formatDate, type Post, readMinutes, wordCount } from '@/lib/posts'
+import { siteConfig } from '@/lib/siteConfig'
+
+interface Props {
+  lang?: Lang
+  post: Post
+  prevPost?: Post | null
+  nextPost?: Post | null
+}
+
+const { lang = defaultLang, post, prevPost = null, nextPost = null } = Astro.props
+const t = useTranslations(lang)
+
+const date = formatDate(post.data.published)
+const updated = post.data.updated ? formatDate(post.data.updated) : ''
+const words = wordCount(post)
+const mins = readMinutes(post)
+const category = post.data.category
+const tags = post.data.tags
+
+// 文章累计阅读 / 独立访客
+const statsEnabled = Boolean(siteConfig.statsScript)
+const statsPath = `/posts/${post.id}`
+// 独立访客单位， 为空则不显示
+const visitorsUnit = t('post.visitorsUnit')
+const { Content, headings } = await render(post)
+const hasToc = headings.length > 0
+const tocMinLevel = hasToc ? Math.min(...headings.map((h) => h.depth)) : 2
+const postUrl = (p: Post) => localePath(lang, `/posts/${p.id}`)
+const categoryUrl = localePath(lang, `/categories/${encodeURIComponent(category)}`)
+const tagUrl = (tag: string) => localePath(lang, `/tags/${encodeURIComponent(tag)}`)
+const postPageUrl = new URL(postUrl(post), Astro.site).href
+const licenseDeedUrl = `https://creativecommons.org/licenses/by-nc-sa/4.0/deed.${lang}`
+const [licensePre = '', licensePost = ''] = t('post.copyright.licenseText').split('{link}')
+const postYear = post.data.published.getFullYear()
+---
+
+<div>
+  <header class="mx-auto mb-8 mt-8 max-w-[800px] text-center">
+    <h1 class="mb-3 font-serif text-[2rem] leading-snug font-bold tracking-tight text-ink max-md:text-2xl">
+      {post.data.title}
+    </h1>
+    <div class="space-y-1 text-[0.88rem] text-ink-3">
+      <!-- 日期 | 分类 -->
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <span class="inline-flex items-center gap-1">
+          <Icon d={mdiCalendarOutline} class="text-sm" />
+          {date}
+        </span>
+        <span class="text-line">|</span>
+        <a href={categoryUrl} class="inline-flex items-center gap-1 transition hover:text-accent">
+          <Icon d={mdiFolderOutline} class="text-sm" />
+          {category}
+        </a>
+      </div>
+      <!-- 总字数 | 阅读时间 | 阅读次数 | 独立访客 -->
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <span class="inline-flex items-center gap-1">
+          <Icon d={mdiTextRecognition} class="text-sm" />
+          {words}
+          {t('post.words')}
+        </span>
+        <span class="text-line">|</span>
+        <span class="inline-flex items-center gap-1">
+          <Icon d={mdiClockOutline} class="text-sm" />
+          {mins}
+          {t('post.minutes')}
+        </span>
+        {
+          statsEnabled && (
+            <>
+              <span class="text-line">|</span>
+              <span
+                class="inline-flex items-center gap-1"
+                data-stats-path={statsPath}
+              >
+                <Icon d={mdiEye} class="text-sm" />
+                <span data-stats="article-pv">-</span>
+                {visitorsUnit}
+              </span>
+              <span class="text-line">|</span>
+              <span
+                class="inline-flex items-center gap-1"
+                data-stats-path={statsPath}
+              >
+                <Icon d={mdiAccountOutline} class="text-sm" />
+                <span data-stats="article-uv">-</span>
+                {visitorsUnit}
+              </span>
+            </>
+          )
+        }
+      </div>
+      <!-- 更新时间 -->
+      {
+        updated && (
+          <div class="flex flex-wrap items-center justify-center gap-3">
+            <span class="inline-flex items-center gap-1">
+              <Icon d={mdiUpdate} class="text-sm" />
+              {t('post.updated')} {updated}
+            </span>
+          </div>
+        )
+      }
+    </div>
+    {
+      post.data.description && (
+        <p class="mx-auto mt-4 max-w-[640px] text-[0.92rem] leading-relaxed text-ink-3">
+          {post.data.description}
+        </p>
+      )
+    }
+  </header>
+
+  <div class="relative mx-auto max-w-[800px]">
+    <!-- data-pagefind-body：pagefind 只索引该区域，搜索范围限定为文章正文 -->
+    <div class="post-content" data-pagefind-body>
+      <Content />
+    </div>
+  </div>
+
+  <footer class="mx-auto mt-12 max-w-[800px] border-t border-line-light pt-6">
+    {
+      tags.length > 0 && (
+        <div class="mb-5 flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <a
+              href={tagUrl(tag)}
+              class="rounded-[3px] border border-line-light bg-surface px-2.5 py-0.5 text-[0.82rem] text-ink-3 transition hover:border-accent hover:text-accent"
+              data-pagefind-filter="tag"
+            >
+              #{tag}
+            </a>
+          ))}
+        </div>
+      )
+    }
+    <!-- 版权声明 -->
+    <div class="copyright mb-5 rounded-[8px] border border-line-light bg-surface px-4 py-4 text-[0.82rem] leading-relaxed text-ink-3 shadow-card">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span>
+          <strong class="font-semibold text-ink">{siteConfig.author}</strong> {t('post.copyright.author', { year: postYear })}
+        </span>
+        <span class="flex items-center gap-2">
+          <span class="rounded-[4px] border border-line bg-paper px-3 py-0.5 font-mono text-[0.7rem] font-bold tracking-wider text-accent uppercase">
+            CC BY-NC-SA 4.0
+          </span>
+          <span class="text-[0.75rem]">{t('post.copyright.licenseLabel')}</span>
+        </span>
+      </div>
+      <p class="mt-2.5">
+        {licensePre}
+        <a href={licenseDeedUrl} target="_blank" rel="external nofollow noopener" class="text-accent transition hover:text-accent-hover">
+          {t('post.copyright.licenseName')}
+        </a>
+        {licensePost}
+      </p>
+      <ul class="mt-2.5 list-disc pl-5 text-[0.78rem]">
+        <li class="mb-0.5">
+          <strong class="font-semibold text-ink-2">{t('post.copyright.mayTitle')}</strong>{t('post.copyright.mayText')}
+        </li>
+        <li class="mb-0.5">
+          <strong class="font-semibold text-ink-2">{t('post.copyright.mustTitle')}</strong>{t('post.copyright.mustText')}
+        </li>
+        <li>
+          <strong class="font-semibold text-ink-2">{t('post.copyright.originalLink')}</strong>
+          <a href={postPageUrl} class="break-all text-accent transition hover:text-accent-hover">{postPageUrl}</a>
+        </li>
+      </ul>
+      <div class="mt-3.5 border-t border-line-light pt-3.5 text-[0.75rem]">
+        {t('post.copyright.disclaimer')}
+      </div>
+    </div>
+    <nav class="flex justify-between gap-4 max-md:flex-col">
+      {
+        prevPost ? (
+          <a href={postUrl(prevPost)} class="min-w-0 flex-1 truncate rounded-[8px] border border-line-light bg-surface px-4 py-3 text-left text-[0.9rem] text-ink-2 transition hover:border-accent hover:text-accent max-md:max-w-full">
+            <span class="mb-0.5 block text-[0.78rem] text-ink-3">{t('post.prev')}</span>
+            <span class="block truncate">{prevPost.data.title}</span>
+          </a>
+        ) : (
+          <span class="min-w-0 flex-1 cursor-not-allowed rounded-[8px] border border-line-light bg-surface px-4 py-3 text-left text-[0.9rem] text-ink-2 opacity-40 max-md:max-w-full">
+            <span class="mb-0.5 block text-[0.78rem] text-ink-3">{t('post.prev')}</span>
+            <span class="block truncate">{t('post.noMore')}</span>
+          </span>
+        )
+      }
+      {
+        nextPost ? (
+          <a href={postUrl(nextPost)} class="min-w-0 flex-1 truncate rounded-[8px] border border-line-light bg-surface px-4 py-3 text-right text-[0.9rem] text-ink-2 transition hover:border-accent hover:text-accent max-md:max-w-full">
+            <span class="mb-0.5 block text-[0.78rem] text-ink-3">{t('post.next')}</span>
+            <span class="block truncate">{nextPost.data.title}</span>
+          </a>
+        ) : (
+          <span class="min-w-0 flex-1 cursor-not-allowed rounded-[8px] border border-line-light bg-surface px-4 py-3 text-right text-[0.9rem] text-ink-2 opacity-40 max-md:max-w-full">
+            <span class="mb-0.5 block text-[0.78rem] text-ink-3">{t('post.next')}</span>
+            <span class="block truncate">{t('post.noMore')}</span>
+          </span>
+        )
+      }
+    </nav>
+  </footer>
+
+  <!-- Utterances 评论（config.yaml utterances.repo 留空则不渲染） -->
+  <Utterances />
+
+  <!-- 桌面端目录 -->
+  {
+    hasToc && (
+      <aside id="toc-affix" class="hidden opacity-0 transition-opacity duration-200 xl:block">
+        <div class="toc-affix fixed z-40 w-52">
+          <div class="mb-3 shrink-0 text-[0.78rem] font-semibold tracking-[0.08em] uppercase text-ink-3">
+            {t('post.tableOfContents')}
+          </div>
+          <ul class="toc-affix-list m-0 list-none p-0">
+            {headings.map((h) => (
+              <li>
+                <a
+                  href={`#${h.slug}`}
+                  class="toc-link"
+                  data-toc-target={h.slug}
+                  style={`padding-left: ${12 + (h.depth - tocMinLevel) * 14}px`}
+                >
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    )
+  }
+
+  <!-- 移动端目录模态框 -->
+  {
+    hasToc && (
+      <div id="toc-modal" class="wp-overlay fixed inset-0 z-[1500] hidden items-center justify-center bg-black/40 p-4">
+        <div class="wp-modal-panel flex max-h-[85vh] w-full flex-col rounded-[8px] border border-line-light bg-surface shadow-card" style="max-width: 520px">
+          <div class="flex items-center justify-between border-b border-line-light px-5 py-3.5">
+            <h3 class="font-bold text-ink">{t('post.toc')}</h3>
+            <button id="toc-close" class="rounded p-1 text-ink-3 transition hover:bg-surface-hover hover:text-ink" type="button">
+              <Icon d={mdiClose} class="text-lg" />
+            </button>
+          </div>
+          <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <ul class="m-0 list-none p-0">
+              {headings.map((h) => (
+                <li>
+                  <a
+                    href={`#${h.slug}`}
+                    class="toc-link py-2! text-[0.9rem]!"
+                    style={`padding-left: ${12 + (h.depth - tocMinLevel) * 14}px; padding-right: 12px;`}
+                    data-toc-target={h.slug}
+                  >
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    )
+  }
+</div>
+
+<script>
+  import { onPageLoad } from '@/lib/pageLifecycle'
+  import { iconSvg } from '@/lib/icons'
+
+  function copyTextFallback(text: string) {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px'
+    document.body.appendChild(ta)
+    ta.select()
+    try {
+      document.execCommand('copy')
+    } catch {
+      /* ignore */
+    }
+    document.body.removeChild(ta)
+  }
+  const COPY_IDLE_HTML = `${iconSvg('mdi-content-copy')}<span>复制</span>`
+  const COPY_DONE_HTML = `${iconSvg('mdi-check')}<span>已复制</span>`
+  ;(window as any).__blogCopyCode = function (btn: HTMLElement) {
+    const block = btn.closest('.code-block')
+    const code = block?.querySelector('code')
+    if (!code) return
+    const text = code.textContent || ''
+    const done = () => {
+      btn.innerHTML = COPY_DONE_HTML
+      btn.classList.add('is-success')
+      setTimeout(() => {
+        btn.innerHTML = COPY_IDLE_HTML
+        btn.classList.remove('is-success')
+      }, 2000)
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => {
+        copyTextFallback(text)
+        done()
+      })
+    } else {
+      copyTextFallback(text)
+      done()
+    }
+  }
+
+  const TOC_OFFSET = 80
+  const TOC_SNAP_RANGE = 80
+
+  function findAnchorTarget(id: string): HTMLElement | null {
+    let el = document.getElementById(id)
+    if (el) return el
+    try {
+      const decoded = decodeURIComponent(id)
+      if (decoded !== id) {
+        el = document.getElementById(decoded)
+        if (el) return el
+      }
+    } catch {}
+    const encoded = encodeURIComponent(id)
+    if (encoded !== id) {
+      el = document.getElementById(encoded)
+      if (el) return el
+    }
+    return null
+  }
+
+  function smoothScrollToHeading(id: string): HTMLElement | null {
+    const el = findAnchorTarget(id)
+    if (!el) return null
+    const top = el.getBoundingClientRect().top + window.scrollY - TOC_OFFSET
+    window.scrollTo({ top, behavior: 'smooth' })
+    return el
+  }
+
+  let postBody: HTMLElement | null = null
+  let activeHeading = ''
+
+  function tocScrollDelta(list: HTMLElement, active: HTMLElement): number {
+    const listRect = list.getBoundingClientRect()
+    const activeRect = active.getBoundingClientRect()
+    const pad = 12
+    if (activeRect.top < listRect.top + pad) return activeRect.top - listRect.top - pad
+    if (activeRect.bottom > listRect.bottom - pad) return activeRect.bottom - listRect.bottom + pad
+    return 0
+  }
+
+  function updateActiveToc() {
+    if (!postBody) return
+    const headingEls = Array.from(postBody.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'))
+    if (!headingEls.length) return
+    const threshold = TOC_OFFSET + 16
+    let currentByPassed: string | null = null
+    let snapId: string | null = null
+    let snapDist = Number.POSITIVE_INFINITY
+    for (const el of headingEls) {
+      const top = el.getBoundingClientRect().top
+      if (top <= threshold) currentByPassed = el.id
+      if (top >= threshold && top <= threshold + TOC_SNAP_RANGE) {
+        const dist = top - threshold
+        if (dist < snapDist) {
+          snapDist = dist
+          snapId = el.id
+        }
+      }
+    }
+    const chosen = snapId || currentByPassed || headingEls[0].id
+    if (chosen === activeHeading) return
+    const affixList = document.querySelector<HTMLElement>('.toc-affix-list')
+    const affixActive = affixList?.querySelector<HTMLElement>(`.toc-link[data-toc-target="${chosen}"]`)
+    const affixDelta = affixList && affixActive ? tocScrollDelta(affixList, affixActive) : 0
+    const modalVisible = tocModal && !tocModal.classList.contains('hidden')
+    const modalList = modalVisible ? tocModal!.querySelector<HTMLElement>('.overflow-y-auto') : null
+    const modalActive = modalList?.querySelector<HTMLElement>(`.toc-link[data-toc-target="${chosen}"]`)
+    const modalDelta = modalList && modalActive ? tocScrollDelta(modalList, modalActive) : 0
+    activeHeading = chosen
+    document.querySelectorAll<HTMLAnchorElement>('.toc-link').forEach((a) => {
+      a.classList.toggle('toc-active', a.dataset.tocTarget === chosen)
+    })
+    if (affixList && affixDelta) affixList.scrollTop += affixDelta
+    if (modalList && modalDelta) modalList.scrollTop += modalDelta
+  }
+
+  function scrollTocListToActive(list: HTMLElement, active: HTMLElement) {
+    const listRect = list.getBoundingClientRect()
+    const activeRect = active.getBoundingClientRect()
+    const pad = 12
+    if (activeRect.top < listRect.top + pad) {
+      list.scrollTop += activeRect.top - listRect.top - pad
+    } else if (activeRect.bottom > listRect.bottom - pad) {
+      list.scrollTop += activeRect.bottom - listRect.bottom + pad
+    }
+  }
+
+  let scrollRaf = 0
+  window.addEventListener(
+    'scroll',
+    () => {
+      cancelAnimationFrame(scrollRaf)
+      scrollRaf = requestAnimationFrame(updateActiveToc)
+    },
+    { passive: true },
+  )
+
+  document.addEventListener('click', (ev) => {
+    const link = (ev.target as HTMLElement)?.closest<HTMLAnchorElement>('.toc-link')
+    if (!link) return
+    const id = link.dataset.tocTarget || link.getAttribute('href')?.slice(1)
+    if (!id) return
+    const el = findAnchorTarget(id)
+    if (!el) return
+    ev.preventDefault()
+    smoothScrollToHeading(el.id)
+    history.replaceState(history.state, '', `#${el.id}`)
+    closeTocModal()
+  })
+
+  let tocModal: HTMLElement | null = null
+
+  function openTocModal() {
+    if (!tocModal) return
+    tocModal.classList.remove('hidden')
+    tocModal.classList.add('flex')
+    requestAnimationFrame(() => {
+      if (!tocModal) return
+      const modalList = tocModal.querySelector<HTMLElement>('.overflow-y-auto')
+      const active = modalList?.querySelector<HTMLElement>('.toc-active')
+      if (modalList && active) scrollTocListToActive(modalList, active)
+    })
+  }
+  function closeTocModal() {
+    if (!tocModal) return
+    tocModal.classList.add('hidden')
+    tocModal.classList.remove('flex')
+  }
+
+  async function initPhotoswipe() {
+    const container = document.querySelector('.post-content')
+    if (!container || !container.querySelector('a.img-lightbox img')) return
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a.img-lightbox'))
+    const imgs = links
+      .map((a) => a.querySelector<HTMLImageElement>('img'))
+      .filter((img): img is HTMLImageElement => !!img)
+    await Promise.race([
+      Promise.all(
+        imgs.map((img) =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise<void>((resolve) => {
+                img.addEventListener('load', () => resolve(), { once: true })
+                img.addEventListener('error', () => resolve(), { once: true })
+              }),
+        ),
+      ),
+      new Promise((resolve) => setTimeout(resolve, 2500)),
+    ])
+    links.forEach((a) => {
+      const img = a.querySelector<HTMLImageElement>('img')
+      if (!img || a.dataset.pswpWidth) return
+      const setDims = () => {
+        if (img.naturalWidth) {
+          a.dataset.pswpWidth = String(img.naturalWidth)
+          a.dataset.pswpHeight = String(img.naturalHeight)
+        }
+      }
+      if (img.naturalWidth) setDims()
+      else img.addEventListener('load', setDims, { once: true })
+    })
+    const [{ default: PhotoSwipeLightbox }, { default: PhotoSwipe }] = await Promise.all([
+      import('photoswipe/lightbox'),
+      import('photoswipe'),
+    ])
+    const lightbox = new PhotoSwipeLightbox({
+      gallery: '.post-content',
+      children: 'a.img-lightbox',
+      showHideAnimationType: 'zoom',
+      imageClickAction: 'next',
+      bgOpacity: 0.85,
+      pswpModule: () => PhotoSwipe,
+    } as any)
+    lightbox.on('uiRegister', () => {
+      lightbox.pswp?.ui?.registerElement({
+        name: 'custom-caption',
+        order: 9,
+        isButton: false,
+        appendTo: 'root',
+        onInit: (el, pswp) => {
+          const caption = el as HTMLElement
+          caption.style.cssText =
+            'position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;text-shadow:0 1px 3px rgba(0,0,0,.6);pointer-events:none'
+          pswp.on('change', () => {
+            const slide = pswp.currSlide
+            caption.textContent =
+              slide && slide.data.width ? `${slide.data.width} × ${slide.data.height}` : ''
+          })
+        },
+      })
+    })
+    lightbox.init()
+  }
+
+  function initImageFrames() {
+    document
+      .querySelectorAll<HTMLElement>('.post-content .img-frame:not(.is-loaded):not(.is-error)')
+      .forEach((frame) => {
+        const img = frame.querySelector<HTMLImageElement>('img')
+        if (!img) {
+          frame.classList.add('is-loaded')
+          return
+        }
+        if (img.complete && img.naturalWidth > 0) {
+          frame.classList.add('is-loaded')
+          return
+        }
+        img.addEventListener('load', () => frame.classList.add('is-loaded'), { once: true })
+        img.addEventListener('error', () => frame.classList.add('is-error'), { once: true })
+      })
+  }
+
+  function scheduleIdle(fn: () => void) {
+    const g = window as unknown as { requestIdleCallback?: (cb: () => void, opt: { timeout: number }) => void }
+    if (g.requestIdleCallback) {
+      g.requestIdleCallback(fn, { timeout: 1000 })
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(fn, 0)))
+    }
+  }
+
+  function initPage() {
+    postBody = document.querySelector<HTMLElement>('.post-content')
+    activeHeading = ''
+    tocModal = document.getElementById('toc-modal')
+
+    document.getElementById('toc-fab')?.addEventListener('click', openTocModal)
+    document.getElementById('toc-close')?.addEventListener('click', closeTocModal)
+    tocModal?.addEventListener('click', (e) => {
+      if (e.target === tocModal) closeTocModal()
+    })
+
+    document.querySelectorAll('#toc-affix').forEach((el) => {
+      if (!el.closest('#swup-container')) el.remove()
+    })
+    const affix = document.getElementById('toc-affix')
+    if (affix) {
+      document.body.appendChild(affix)
+      window.setTimeout(() => affix.classList.remove('opacity-0'), 150)
+    }
+
+    if (postBody) {
+      postBody.addEventListener('click', (ev) => {
+        const target = ev.target as HTMLElement | null
+        const link = target?.closest('a') as HTMLAnchorElement | null
+        if (!link) return
+        const href = link.getAttribute('href') || ''
+        if (!href.startsWith('#')) return
+        const raw = href.slice(1)
+        if (!raw) return
+        const el = findAnchorTarget(raw)
+        if (!el) return
+        ev.preventDefault()
+        smoothScrollToHeading(el.id)
+        history.replaceState(history.state, '', `#${el.id}`)
+      })
+      setTimeout(updateActiveToc, 150)
+    }
+
+    scheduleIdle(() => {
+      initImageFrames()
+      initPhotoswipe().catch(() => {})
+    })
+  }
+
+  onPageLoad(initPage)
+</script>

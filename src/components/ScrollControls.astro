@@ -1,0 +1,39 @@
+---
+import '@/styles/ScrollControls.css'
+import Icon from '@/components/Icon.astro'
+import { defaultLang, type Lang, useTranslations } from '@/i18n/ui'
+import { mdiArrowUp, mdiMagnify, mdiTableOfContents, mdiWeatherNight } from '@/lib/icons'
+
+interface Props {
+  lang?: Lang
+  showTocButton?: boolean
+}
+
+const { lang = defaultLang, showTocButton = false } = Astro.props
+const t = useTranslations(lang)
+---
+
+<nav class="fixed right-5 bottom-8 z-[90] flex flex-col gap-2 max-md:right-3 max-md:bottom-16">
+  {
+    showTocButton && (
+      <button
+        type="button"
+        id="toc-fab"
+        class="scroll-control-btn toc-btn"
+        title={t('post.toc')}
+      >
+        <Icon d={mdiTableOfContents} />
+      </button>
+    )
+  }
+  <button type="button" data-theme-toggle class="scroll-control-btn" title={t('header.switchToDark')}>
+    <Icon d={mdiWeatherNight} />
+  </button>
+  <button type="button" data-open-search class="scroll-control-btn" title={t('search.open')}>
+    <Icon d={mdiMagnify} />
+  </button>
+  <button type="button" data-backtop class="scroll-control-btn" title="回到顶部">
+    <Icon d={mdiArrowUp} />
+  </button>
+</nav>
+

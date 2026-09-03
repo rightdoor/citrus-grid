@@ -1,0 +1,135 @@
+---
+import Icon from '@/components/Icon.astro'
+import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
+import { mdiMagnify, mdiTagOutline } from '@/lib/icons'
+import type { NameCount } from '@/lib/posts'
+
+interface Props {
+  lang?: Lang
+  tags: NameCount[]
+}
+
+const { lang = defaultLang, tags } = Astro.props
+const t = useTranslations(lang)
+---
+
+<div class="mx-auto max-w-[800px] mt-8" id="tags">
+  <header class="mb-8 text-center">
+    <h1 class="font-serif text-[1.75rem] font-bold text-ink">{t('tags.title')}</h1>
+    <p class="mt-1 text-sm text-ink-3">{t('tags.subtitle')}</p>
+  </header>
+
+  <div class="mb-6 flex items-center gap-3">
+    <div class="flex flex-1 items-center gap-2 rounded-[8px] border border-line-light bg-paper px-3 py-2 transition focus-within:border-accent">
+      <Icon d={mdiMagnify} class="text-ink-3" />
+      <input
+        type="text"
+        id="tag-search"
+        placeholder={t('tags.searchPlaceholder')}
+        class="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-3"
+      />
+    </div>
+    <div class="flex items-center gap-1">
+      <button
+        type="button"
+        class="sort-btn rounded-[6px] bg-paper px-2.5 py-1 text-sm transition"
+        data-sort="name"
+        title={t('misc.sortByName')}
+      >
+        A
+      </button>
+      <button
+        type="button"
+        class="sort-btn rounded-[6px] bg-paper px-2.5 py-1 text-sm transition"
+        data-sort="count"
+        title={t('misc.sortByCount')}
+      >
+        #
+      </button>
+    </div>
+  </div>
+
+  {
+    tags.length === 0 ? (
+      <div class="mt-16 text-center text-[0.95rem] text-ink-3">{t('tags.empty')}</div>
+    ) : (
+      <div class="mt-4 flex flex-wrap justify-center gap-2.5" id="tag-list">
+        {tags.map((item) => (
+          <a
+            href={localePath(lang, `/tags/${encodeURIComponent(item.name)}`)}
+            class="tag-row inline-flex items-center gap-1.5 rounded-[8px] border border-line-light bg-surface px-3 py-1.5 text-[0.9rem] text-ink! shadow-card transition hover:-translate-y-px hover:border-accent hover:text-accent! hover:shadow-card-hover"
+            data-name={item.name}
+            data-count={item.count}
+          >
+            <Icon d={mdiTagOutline} class="text-sm" />
+            {item.name}
+            <span class="min-w-[1.4em] rounded-[3px] bg-paper px-1 py-0.5 text-center text-[0.75rem] text-ink-3">
+              {item.count}
+            </span>
+          </a>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    tags.length > 0 && (
+      <div class="mt-8 text-center text-sm text-ink-3">
+        {t('tags.total', { n: tags.length })}
+      </div>
+    )
+  }
+</div>
+
+<script>
+  import { tagsSort } from '@/stores/ui'
+  import { onPageLoad } from '@/lib/pageLifecycle'
+
+  function initTagsPage() {
+    const root = document.getElementById('tags')
+    if (!root) return
+    const searchInput = root.querySelector<HTMLInputElement>('#tag-search')
+    const list = root.querySelector<HTMLElement>('#tag-list')
+    const rows = Array.from(list?.querySelectorAll<HTMLElement>('.tag-row') ?? [])
+    const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('.sort-btn'))
+
+    let sortBy: 'name' | 'count' = tagsSort.get()
+
+    function render() {
+      if (!list) return
+      const q = (searchInput?.value || '').trim().toLowerCase()
+      const filtered = rows.filter((r) => (r.dataset.name || '').toLowerCase().includes(q))
+      const sorted = [...filtered].sort((a, b) => {
+        if (sortBy === 'name') {
+          return (a.dataset.name || '').localeCompare(b.dataset.name || '', 'zh')
+        }
+        return Number(b.dataset.count || 0) - Number(a.dataset.count || 0)
+      })
+      for (const row of rows) row.style.display = 'none'
+      for (const row of sorted) {
+        row.style.display = ''
+        list.appendChild(row)
+      }
+      for (const btn of sortBtns) {
+        const active = btn.dataset.sort === sortBy
+        btn.classList.toggle('bg-accent', active)
+        btn.classList.toggle('bg-paper', !active)
+        btn.classList.toggle('text-white', active)
+        btn.classList.toggle('text-ink-3', !active)
+        btn.classList.toggle('hover:bg-surface-hover', !active)
+        btn.classList.toggle('hover:text-ink', !active)
+      }
+    }
+
+    searchInput?.addEventListener('input', render)
+    for (const btn of sortBtns) {
+      btn.addEventListener('click', () => {
+        sortBy = (btn.dataset.sort as 'name' | 'count') || 'count'
+        tagsSort.set(sortBy)
+        render()
+      })
+    }
+    render()
+  }
+  onPageLoad(initTagsPage)
+</script>

@@ -1,0 +1,42 @@
+.toc-affix {
+  left: calc(50% + 26rem);
+  top: 96px;
+}
+.toc-affix-list {
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.toc-affix-list::-webkit-scrollbar {
+  display: none;
+}
+.toc-link {
+  display: block;
+  overflow: hidden;
+  padding: 3px 8px;
+  margin-left: 2px;
+  border-left: 2px solid var(--wp-border-light);
+  font-size: 0.82rem;
+  color: var(--wp-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+}
+.toc-link:hover {
+  color: var(--wp-text);
+  border-left-color: var(--wp-text-tertiary);
+}
+.toc-link.toc-active {
+  color: var(--wp-accent);
+  font-weight: 600;
+  border-left-color: var(--wp-accent);
+  background: color-mix(in srgb, var(--wp-accent) 7%, transparent);
+  border-radius: 0 4px 4px 0;
+}
+.dark .toc-link.toc-active {
+  background: color-mix(in srgb, var(--wp-accent) 10%, transparent);
+}

@@ -1,0 +1,79 @@
+---
+import Icon from '@/components/Icon.astro'
+import { defaultLang, type Lang, useTranslations } from '@/i18n/ui'
+import { mdiChevronLeft, mdiChevronRight } from '@/lib/icons'
+
+interface Props {
+  lang?: Lang
+  currentPage: number
+  totalPages: number
+  baseUrl: string
+}
+
+const { lang = defaultLang, currentPage, totalPages, baseUrl } = Astro.props
+const t = useTranslations(lang)
+
+function pageUrl(page: number): string {
+  const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+  return page <= 1 ? `${base}/` : `${base}/${page}`
+}
+
+function pages(): (number | '...')[] {
+  const n = totalPages
+  const c = currentPage
+  const s = 1
+  if (n <= 5 + s * 2) return Array.from({ length: n }, (_, i) => i + 1)
+  const out: (number | '...')[] = [1]
+  if (c > s + 2) out.push('...')
+  for (let i = Math.max(2, c - s); i <= Math.min(n - 1, c + s); i++) out.push(i)
+  if (c < n - s - 1) out.push('...')
+  out.push(n)
+  return out
+}
+---
+
+{
+  totalPages > 1 && (
+    <div class="mt-5 flex items-center justify-center gap-1 text-sm">
+      <a
+        href={pageUrl(currentPage - 1)}
+        class:list={[
+          'inline-flex h-8 min-w-8 items-center justify-center rounded px-2 text-ink-2! transition hover:bg-surface hover:text-accent!',
+          currentPage <= 1 && 'pointer-events-none opacity-40',
+        ]}
+        aria-disabled={currentPage <= 1}
+        aria-label={t('pagination.prev')}
+      >
+        <Icon d={mdiChevronLeft} />
+      </a>
+      {pages().map((item) =>
+        item === '...' ? (
+          <span class="inline-flex h-8 min-w-8 items-center justify-center text-ink-3">…</span>
+        ) : (
+          <a
+            href={pageUrl(item)}
+            class:list={[
+              'inline-flex h-8 min-w-8 items-center justify-center rounded px-2 transition',
+              item === currentPage
+                ? 'bg-accent font-semibold text-white!'
+                : 'text-ink-2! hover:bg-surface hover:text-accent!',
+            ]}
+          >
+            {item}
+          </a>
+        ),
+      )}
+      <a
+        href={pageUrl(currentPage + 1)}
+        class:list={[
+          'inline-flex h-8 min-w-8 items-center justify-center rounded px-2 text-ink-2! transition hover:bg-surface hover:text-accent!',
+          currentPage >= totalPages && 'pointer-events-none opacity-40',
+        ]}
+        aria-disabled={currentPage >= totalPages}
+        aria-label={t('pagination.next')}
+      >
+        <Icon d={mdiChevronRight} />
+      </a>
+    </div>
+  )
+}

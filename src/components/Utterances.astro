@@ -1,0 +1,47 @@
+---
+//  Utterances 评论，基于 https://utteranc.es
+import { siteConfig } from '@/lib/siteConfig'
+
+const repo = String((siteConfig.utterances as { repo?: string } | undefined)?.repo ?? '').trim()
+---
+
+{
+  repo && (
+    <section class="mx-auto mt-10 max-w-[800px]" aria-label="Comments">
+      <div id="utterances" data-repo={repo} />
+    </section>
+  )
+}
+
+<script>
+  import { onPageLoad } from '@/lib/pageLifecycle'
+
+  const UTTERANCES_ORIGIN = 'https://utteranc.es'
+  const utterancesTheme = (dark: boolean) => (dark ? 'github-dark' : 'github-light')
+
+  function syncUtterancesTheme(dark: boolean) {
+    document.querySelectorAll<HTMLIFrameElement>('.utterances iframe').forEach((iframe) => {
+      iframe.contentWindow?.postMessage({ type: 'set-theme', theme: utterancesTheme(dark) }, UTTERANCES_ORIGIN)
+    })
+  }
+
+  function initUtterances() {
+    const mount = document.getElementById('utterances')
+    if (!mount || mount.childElementCount > 0) return
+
+    const script = document.createElement('script')
+    script.src = 'https://utteranc.es/client.js'
+    script.async = true
+    script.crossOrigin = 'anonymous'
+    script.setAttribute('repo', mount.dataset.repo ?? '')
+    script.setAttribute('issue-term', 'pathname')
+    script.setAttribute('theme', utterancesTheme(document.documentElement.classList.contains('dark')))
+    mount.appendChild(script)
+  }
+
+  document.addEventListener('theme-change', (e) => {
+    syncUtterancesTheme((e as CustomEvent<string>).detail === 'dark')
+  })
+
+  onPageLoad(initUtterances)
+</script>

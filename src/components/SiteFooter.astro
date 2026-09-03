@@ -1,0 +1,46 @@
+---
+import Icon from '@/components/Icon.astro'
+import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
+import { mdiRss, mdiSitemap } from '@/lib/icons'
+import { getPublishedPosts } from '@/lib/posts'
+
+interface Props {
+  lang?: Lang
+}
+
+const { lang = defaultLang } = Astro.props
+const t = useTranslations(lang)
+const currentYear = new Date().getFullYear()
+
+// 博客运行天数：以最早一篇文章的发布时间为起点，构建时计算
+const publishedPosts = await getPublishedPosts()
+const earliest = publishedPosts.reduce<Date | null>(
+  (min, p) => (min === null || p.data.published < min ? p.data.published : min),
+  null,
+)
+const runningDays = earliest
+  ? Math.max(1, Math.floor((Date.now() - earliest.valueOf()) / 86400000))
+  : 0
+---
+
+<footer
+  class="wp-glass mx-auto mt-4 w-full max-w-[800px] rounded-[8px] px-6 py-6 text-center text-[0.82rem] text-ink-3"
+>
+  <p class="my-1">
+    © {currentYear} <a href="https://github.com/rightdoor" target="_blank" rel="noopener noreferrer" class="hover:text-accent"> RightDoor</a> All rights reserved
+  </p>
+  <p>Powered by <a href="https://astro.build" target="_blank" rel="noopener noreferrer" class="hover:text-accent">Astro</a> & <a href="https://github.com/rightdoor/citrus-grid" target="_blank" rel="noopener noreferrer" class="hover:text-accent">CitrusGrid</a>
+  </p>
+  <p class="my-1 flex items-center justify-center gap-3">
+    <a href={localePath(lang, '/rss.xml')} class="inline-flex items-center gap-1 hover:text-accent">
+      <Icon d={mdiRss} class="text-sm" />
+      {t('footer.rss')}
+    </a>
+    <span class="text-line">|</span>
+    <a href="/sitemap-index.xml" class="inline-flex items-center gap-1 hover:text-accent">
+      <Icon d={mdiSitemap} class="text-sm" />
+      {t('footer.sitemap')}
+    </a>
+  </p>
+  {runningDays > 0 && <p class="my-1">{t('footer.running', { days: runningDays })}</p>}
+</footer>

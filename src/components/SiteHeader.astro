@@ -1,0 +1,115 @@
+---
+import Icon from '@/components/Icon.astro'
+import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
+import { mdiMenu } from '@/lib/icons'
+import { siteConfig } from '@/lib/siteConfig'
+
+interface Props {
+  lang?: Lang
+}
+
+const { lang = defaultLang } = Astro.props
+const t = useTranslations(lang)
+
+const navItems = [
+  { path: '/', label: t('nav.home') },
+  { path: '/archive', label: t('nav.archive') },
+  { path: '/categories', label: t('nav.categories') },
+  { path: '/tags', label: t('nav.tags') },
+  { path: '/friends', label: t('nav.friends') },
+  { path: '/about', label: t('nav.about') },
+]
+
+const currentPath = Astro.url.pathname
+const isHomePaged = /^\/\d+(\/|$)/.test(currentPath)
+function isActive(path: string): boolean {
+  const full = localePath(lang, path)
+  if (path === '/') return currentPath === full || currentPath === `${full}/` || isHomePaged
+  return currentPath.startsWith(full)
+}
+---
+
+<header
+  class="sticky top-0 z-[100] border-b border-line-light"
+  style="background-color: var(--wp-header-bg); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);"
+>
+  <div
+    class="relative mx-auto flex h-[60px] max-w-[1200px] items-center justify-between px-6 max-md:h-[52px] max-md:px-4"
+  >
+    <a
+      href={localePath(lang, '/')}
+      class="flex items-center gap-2 font-serif text-xl font-bold tracking-tight"
+    >
+      <img class="h-7 w-7" src={siteConfig.logo} alt="Logo" width="28" height="28" />
+      <span>{siteConfig.title}</span>
+    </a>
+
+    <nav class="absolute left-1/2 top-0 flex h-full -translate-x-1/2 items-stretch gap-6 max-md:hidden">
+      {
+        navItems.map((item) => (
+          <a
+            href={localePath(lang, item.path)}
+            data-nav-path={localePath(lang, item.path)}
+            class:list={[
+              'relative flex items-center text-[0.9rem] font-medium transition hover:text-accent',
+              isActive(item.path) ? 'text-accent' : 'text-ink-2',
+            ]}
+          >
+            {item.label}
+            <span
+              class:list={[
+                'absolute right-0 -bottom-px left-0 h-[2px] rounded-full bg-accent-deep transition-opacity duration-150',
+                { 'opacity-0': !isActive(item.path) },
+              ]}
+            />
+          </a>
+        ))
+      }
+      <!-- 隐藏高亮槽：非顶层页面（非首页/归档/分类/标签/关于）通用，解决切换顿挫感 -->
+      <a
+        data-nav-path="__fallback__"
+        aria-hidden="true"
+        tabindex="-1"
+        class="hidden text-accent"
+      ></a>
+    </nav>
+
+    <!-- 移动端菜单 -->
+    <div class="hidden max-md:block">
+      <details class="group relative">
+        <summary
+          class="flex cursor-pointer list-none items-center rounded-[8px] p-1 text-ink transition hover:bg-surface-hover [&::-webkit-details-marker]:hidden"
+          aria-label={t('header.menu')}
+        >
+          <Icon d={mdiMenu} class="text-xl" />
+        </summary>
+        <div
+          class="absolute top-full right-0 z-[110] mt-2 w-44 rounded-[8px] border border-line-light bg-surface py-1 shadow-card"
+        >
+          {
+            navItems.map((item) => (
+              <a
+                href={localePath(lang, item.path)}
+                data-nav-path={localePath(lang, item.path)}
+                data-nav-mobile
+                class:list={[
+                  'block px-4 py-2 text-[0.9rem] transition hover:bg-surface-hover hover:text-accent',
+                  isActive(item.path) ? 'bg-surface-hover text-accent' : 'text-ink-2',
+                ]}
+              >
+                {item.label}
+              </a>
+            ))
+          }
+        </div>
+      </details>
+    </div>
+  </div>
+</header>
+
+<script>
+  document.addEventListener('click', (e) => {
+    const details = document.querySelector<HTMLDetailsElement>('header details')
+    if (details?.open && !details.contains(e.target as Node)) details.removeAttribute('open')
+  })
+</script>

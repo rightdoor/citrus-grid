@@ -1,0 +1,135 @@
+---
+import Icon from '@/components/Icon.astro'
+import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
+import { mdiFolderOutline, mdiMagnify } from '@/lib/icons'
+import type { NameCount } from '@/lib/posts'
+
+interface Props {
+  lang?: Lang
+  categories: NameCount[]
+}
+
+const { lang = defaultLang, categories } = Astro.props
+const t = useTranslations(lang)
+---
+
+<div class="mx-auto max-w-[800px] mt-8" id="categories">
+  <header class="mb-8 text-center">
+    <h1 class="font-serif text-[1.75rem] font-bold text-ink">{t('categories.title')}</h1>
+    <p class="mt-1 text-sm text-ink-3">{t('categories.subtitle')}</p>
+  </header>
+
+  <div class="mb-6 flex items-center gap-3">
+    <div class="flex flex-1 items-center gap-2 rounded-[8px] border border-line-light bg-paper px-3 py-2 transition focus-within:border-accent">
+      <Icon d={mdiMagnify} class="text-ink-3" />
+      <input
+        type="text"
+        id="category-search"
+        placeholder={t('categories.searchPlaceholder')}
+        class="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-3"
+      />
+    </div>
+    <div class="flex items-center gap-1">
+      <button
+        type="button"
+        class="sort-btn rounded-[6px] bg-paper px-2.5 py-1 text-sm transition"
+        data-sort="name"
+        title={t('misc.sortByName')}
+      >
+        A
+      </button>
+      <button
+        type="button"
+        class="sort-btn rounded-[6px] bg-paper px-2.5 py-1 text-sm transition"
+        data-sort="count"
+        title={t('misc.sortByCount')}
+      >
+        #
+      </button>
+    </div>
+  </div>
+
+  {
+    categories.length === 0 ? (
+      <div class="mt-16 text-center text-[0.95rem] text-ink-3">{t('categories.empty')}</div>
+    ) : (
+      <div class="flex flex-col" id="category-list">
+        {categories.map((c) => (
+          <a
+            href={localePath(lang, `/categories/${encodeURIComponent(c.name)}`)}
+            class="category-row group flex cursor-pointer items-center justify-between rounded-[6px] px-2 py-3 text-ink! transition hover:bg-surface-hover"
+            data-name={c.name}
+            data-count={c.count}
+          >
+            <span class="inline-flex items-center gap-2 text-base transition group-hover:text-accent">
+              <Icon d={mdiFolderOutline} class="text-lg text-ink-3" />
+              {c.name}
+            </span>
+            <span class="rounded-[3px] bg-paper px-2 py-0.5 text-xs text-ink-3">{c.count}</span>
+          </a>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    categories.length > 0 && (
+      <div class="mt-6 text-center text-sm text-ink-3">
+        {t('categories.total', { n: categories.length })}
+      </div>
+    )
+  }
+</div>
+
+<script>
+  import { categoriesSort } from '@/stores/ui'
+  import { onPageLoad } from '@/lib/pageLifecycle'
+
+  function initCategoriesPage() {
+    const root = document.getElementById('categories')
+    if (!root) return
+    const searchInput = root.querySelector<HTMLInputElement>('#category-search')
+    const list = root.querySelector<HTMLElement>('#category-list')
+    const rows = Array.from(list?.querySelectorAll<HTMLElement>('.category-row') ?? [])
+    const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('.sort-btn'))
+
+    let sortBy: 'name' | 'count' = categoriesSort.get()
+
+    function render() {
+      if (!list) return
+      const q = (searchInput?.value || '').trim().toLowerCase()
+      const filtered = rows.filter((r) => (r.dataset.name || '').toLowerCase().includes(q))
+      const sorted = [...filtered].sort((a, b) => {
+        if (sortBy === 'name') {
+          return (a.dataset.name || '').localeCompare(b.dataset.name || '', 'zh')
+        }
+        return Number(b.dataset.count || 0) - Number(a.dataset.count || 0)
+      })
+      for (const row of rows) row.style.display = 'none'
+      for (const row of sorted) {
+        row.style.display = ''
+        list.appendChild(row)
+      }
+      for (const btn of sortBtns) {
+        const active = btn.dataset.sort === sortBy
+        btn.classList.toggle('bg-accent', active)
+        btn.classList.toggle('bg-paper', !active)
+        btn.classList.toggle('text-white', active)
+        btn.classList.toggle('text-ink-3', !active)
+        btn.classList.toggle('hover:bg-surface-hover', !active)
+        btn.classList.toggle('hover:text-ink', !active)
+      }
+    }
+
+    searchInput?.addEventListener('input', render)
+    for (const btn of sortBtns) {
+      btn.addEventListener('click', () => {
+        sortBy = (btn.dataset.sort as 'name' | 'count') || 'count'
+        categoriesSort.set(sortBy)
+        render()
+      })
+    }
+    render()
+  }
+  onPageLoad(initCategoriesPage)
+</script>

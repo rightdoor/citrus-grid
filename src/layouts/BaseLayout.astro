@@ -1,0 +1,233 @@
+---
+import '@/styles/main.css'
+import ScrollControls from '@/components/ScrollControls.astro'
+import SearchModal from '@/components/SearchModal.astro'
+import SiteFooter from '@/components/SiteFooter.astro'
+import SiteHeader from '@/components/SiteHeader.astro'
+import { defaultLang, type Lang } from '@/i18n/ui'
+import { siteConfig } from '@/lib/siteConfig'
+
+interface Props {
+  title?: string
+  description?: string
+  lang?: Lang
+  showTocButton?: boolean
+  seoType?: 'website' | 'article'
+  publishedTime?: string
+  modifiedTime?: string
+  seoImage?: string
+}
+
+const {
+  title,
+  description = siteConfig.description,
+  lang = defaultLang,
+  showTocButton = false,
+  seoType = 'website',
+  publishedTime,
+  modifiedTime,
+  seoImage,
+} = Astro.props
+const pageTitle = title
+  ? `${siteConfig.title} - ${title}`
+  : `${siteConfig.title} - ${siteConfig.subtitle}`
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site)
+const ogImageURL = new URL(seoImage || siteConfig.logo, Astro.site)
+const ogLocale = ({ zh: 'zh_CN', ja: 'ja_JP', en: 'en_US' } as const)[lang]
+
+const jsonLd =
+  seoType === 'article' && title
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: title,
+        description,
+        image: ogImageURL.href,
+        ...(publishedTime ? { datePublished: publishedTime } : {}),
+        ...(modifiedTime || publishedTime ? { dateModified: modifiedTime || publishedTime } : {}),
+        author: { '@type': 'Person', name: siteConfig.author },
+        publisher: {
+          '@type': 'Organization',
+          name: siteConfig.title,
+          logo: { '@type': 'ImageObject', url: new URL(siteConfig.logo, Astro.site).href },
+        },
+        mainEntityOfPage: canonicalURL.href,
+      }
+    : null
+---
+
+<!doctype html>
+<html
+  lang={lang}
+  data-default-theme={siteConfig.defaultTheme}
+  data-stats-script={(siteConfig.statsScript && import.meta.env.PROD ? siteConfig.statsScript : undefined)}
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/webp" href="/logo.webp" />
+    <link rel="canonical" href={canonicalURL.href} />
+    <meta property="og:site_name" content={siteConfig.title} />
+    <meta property="og:type" content={seoType} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL.href} />
+    <meta property="og:image" content={ogImageURL.href} />
+    <meta property="og:locale" content={ogLocale} />
+    {seoType === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
+    {seoType === 'article' && modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL.href} />
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <title>{pageTitle}</title>
+    <script is:inline define:vars={{ defaultTheme: siteConfig.defaultTheme }}>
+      ;(function () {
+        var stored = localStorage.getItem('themeMode')
+        var mode = stored === 'light' || stored === 'dark' ? stored : defaultTheme
+        if (mode !== 'light' && mode !== 'dark') {
+          mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        var root = document.documentElement
+        root.classList.toggle('dark', mode === 'dark')
+        root.style.colorScheme = mode
+      })()
+    </script>
+    <script is:inline>
+      document.addEventListener('DOMContentLoaded', function () {
+        document.dispatchEvent(new Event('astro:page-load'))
+      })
+    </script>
+  </head>
+  <body>
+    <div class="flex min-h-screen flex-col">
+      <SiteHeader lang={lang} />
+      <div id="swup-container" class="transition-swup-fade flex flex-1 flex-col">
+        <main
+          class="wp-glass mx-auto w-full max-w-[800px] mt-2 flex-1 rounded-[8px] px-6 py-2 max-md:px-4 max-md:py-6"
+        >
+          <slot />
+        </main>
+        <ScrollControls lang={lang} showTocButton={showTocButton} />
+      </div>
+      <SiteFooter lang={lang} />
+      <SearchModal lang={lang} />
+    </div>
+
+    <!-- 统计客户端脚本注入， dev 下不注入 -->
+    {siteConfig.statsScript && import.meta.env.PROD && (
+      <script>import '@/stats/client'</script>
+    )}
+
+    <script>
+      import { initTheme } from '@/stores/theme'
+
+      document.addEventListener('astro:page-load', () => {
+        ;(window as any).__pageLoadFired = true
+      })
+      document.addEventListener('astro:before-swap', () => {
+        ;(window as any).__pageLoadFired = false
+      })
+
+      initTheme()
+
+      function syncNavState(path: string = window.location.pathname) {
+        const current = path
+        let anyActive = false
+        document.querySelectorAll<HTMLAnchorElement>('a[data-nav-path]').forEach((a) => {
+          if (a.dataset.navPath === '__fallback__') {
+            a.classList.toggle('text-accent', !anyActive)
+            a.classList.toggle('text-ink-2', anyActive)
+            return
+          }
+          const full = a.dataset.navPath || '/'
+          const active =
+            full === '/'
+              ? current === full || current === `${full}/` || /^\/\d+(\/|$)/.test(current)
+              : current.startsWith(full)
+          if (active) anyActive = true
+          a.classList.toggle('text-accent', active)
+          a.classList.toggle('text-ink-2', !active)
+          if (a.hasAttribute('data-nav-mobile')) a.classList.toggle('bg-surface-hover', active)
+          const bar = a.querySelector<HTMLElement>('span')
+          if (bar && bar.classList.contains('absolute')) bar.classList.toggle('opacity-0', !active)
+        })
+        document.querySelectorAll<HTMLDetailsElement>('header details[open]').forEach((d) => {
+          d.removeAttribute('open')
+        })
+      }
+      function bindNavStartSync(attempt = 0) {
+        const swup = (window as any).swup
+        if (swup?.hooks) {
+          swup.hooks.on('visit:start', (visit: any) => {
+            try {
+              syncNavState(new URL(visit.to.url, window.location.href).pathname)
+            } catch {}
+          })
+        } else if (attempt < 100) {
+          window.setTimeout(() => bindNavStartSync(attempt + 1), 100)
+        }
+      }
+      bindNavStartSync()
+
+      const warmedUrls = new Set<string>()
+      function warmUrl(href: string | null, noCors: boolean) {
+        if (!href || href.startsWith('data:') || warmedUrls.has(href)) return
+        warmedUrls.add(href)
+        fetch(href, { priority: 'low', ...(noCors ? { mode: 'no-cors' as const } : {}) }).catch(
+          () => {},
+        )
+      }
+      function warmPageAssets(html: string) {
+        try {
+          const doc = new DOMParser().parseFromString(html, 'text/html')
+          doc.querySelectorAll('script[type="module"][src]').forEach((s) => {
+            warmUrl(s.getAttribute('src'), false)
+          })
+          doc.querySelectorAll('main img[src]').forEach((img, i) => {
+            if (i > 1) return
+            warmUrl(img.getAttribute('src'), true)
+          })
+        } catch {}
+      }
+      function bindAssetWarmup(attempt = 0) {
+        const swup = (window as any).swup
+        if (swup?.fetchPage) {
+          const original = swup.fetchPage.bind(swup)
+          swup.fetchPage = (...args: unknown[]) =>
+            (original as (...a: unknown[]) => Promise<{ html: string }>)(...args).then((page) => {
+              warmPageAssets(page.html)
+              return page
+            })
+        } else if (attempt < 100) {
+          window.setTimeout(() => bindAssetWarmup(attempt + 1), 100)
+        }
+      }
+      if (import.meta.env.PROD) bindAssetWarmup()
+
+      document.addEventListener('astro:before-swap', () => {
+        document.querySelectorAll('#toc-affix').forEach((el) => {
+          if (!el.closest('#swup-container')) el.remove()
+        })
+        syncNavState()
+      })
+      document.addEventListener('astro:page-load', () => syncNavState())
+
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement
+        const backBtn = target.closest('[data-backtop]')
+        if (backBtn) {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+        const searchBtn = target.closest('[data-open-search]')
+        if (searchBtn) {
+          document.dispatchEvent(new CustomEvent('open-search'))
+        }
+      })
+    </script>
+  </body>
+</html>

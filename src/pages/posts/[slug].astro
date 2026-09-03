@@ -1,0 +1,36 @@
+---
+import PostPage from '@/components/pages/PostPage.astro'
+import { defaultLang } from '@/i18n/ui'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getPublishedPosts, type Post } from '@/lib/posts'
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts()
+  return posts.map((post: Post, idx: number) => ({
+    // entry.id 即 frontmatter slug ，缺失时构建启动由 ensure-post-slugs 按标题拼音补写
+    params: { slug: post.id },
+    props: {
+      post,
+      prevPost: idx > 0 ? posts[idx - 1] : null,
+      nextPost: idx < posts.length - 1 ? posts[idx + 1] : null,
+    },
+  }))
+}
+
+const lang = defaultLang
+const { post, prevPost, nextPost } = Astro.props
+const firstImage = post.body?.match(/!\[[^\]]*\]\(([^)\s]+)/)?.[1]
+---
+
+<BaseLayout
+  lang={lang}
+  title={post.data.title}
+  description={post.data.description}
+  showTocButton
+  seoType="article"
+  publishedTime={post.data.published.toISOString()}
+  modifiedTime={post.data.updated?.toISOString()}
+  seoImage={firstImage}
+>
+  <PostPage lang={lang} post={post} prevPost={prevPost} nextPost={nextPost} />
+</BaseLayout>

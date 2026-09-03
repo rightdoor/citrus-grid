@@ -1,0 +1,165 @@
+---
+import '@/styles/ProfileCard.css'
+import Icon from '@/components/Icon.astro'
+import { defaultLang, type Lang, useTranslations } from '@/i18n/ui'
+import {
+  mdiDevTo,
+  mdiEmailOutline,
+  mdiFacebook,
+  mdiGithub,
+  mdiInstagram,
+  mdiLinkedin,
+  mdiLinkVariant,
+  mdiRss,
+  mdiTwitter,
+  mdiWeb,
+  mdiYoutube,
+} from '@/lib/icons'
+import { getPublishedPosts, readMinutes, totalWords } from '@/lib/posts'
+import { siteConfig } from '@/lib/siteConfig'
+
+interface Props {
+  lang?: Lang
+}
+
+interface Social {
+  platform: string
+  url: string
+}
+
+const { lang = defaultLang } = Astro.props
+const t = useTranslations(lang)
+
+const posts = await getPublishedPosts()
+
+const words = totalWords(posts)
+const minutes = posts.reduce((sum, p) => sum + readMinutes(p), 0)
+const hours = minutes > 0 ? Math.round((minutes / 60) * 10) / 10 : 0
+const articles = posts.length
+
+const statsEnabled = Boolean(siteConfig.statsScript)
+
+const numberLocale = { zh: 'zh-CN', ja: 'ja-JP', en: 'en-US' }[lang]
+
+// 平台图标映射及颜色配置
+const platformIcons: Record<string, string> = {
+  github: mdiGithub,
+  twitter: mdiTwitter,
+  x: mdiTwitter,
+  linkedin: mdiLinkedin,
+  youtube: mdiYoutube,
+  instagram: mdiInstagram,
+  facebook: mdiFacebook,
+  devto: mdiDevTo,
+  rss: mdiRss,
+  email: mdiEmailOutline,
+  mail: mdiEmailOutline,
+  website: mdiWeb,
+  blog: mdiWeb,
+}
+
+const platformBrands: Record<string, string> = {
+  github: '#24292e',
+  twitter: '#1da1f2',
+  x: '#1da1f2',
+  linkedin: '#0a66c2',
+  youtube: '#ff0000',
+  instagram: '#e4405f',
+  facebook: '#1877f2',
+  devto: '#0a0a0a',
+  medium: '#000000',
+  rss: '#f26522',
+}
+
+const socials = ((siteConfig.socials as Social[] | undefined) ?? []).map((s) => {
+  const key = (s.platform || '').toLowerCase()
+  return {
+    ...s,
+    key,
+    icon: platformIcons[key] ?? mdiLinkVariant,
+    brand: platformBrands[key] ?? 'var(--wp-accent)',
+    label: s.platform ? s.platform.charAt(0).toUpperCase() + s.platform.slice(1) : 'Link',
+  }
+})
+
+const isExternal = (url: string) => /^(https?:|mailto:)/.test(url)
+---
+
+<div class="profile-card mx-auto mb-8 max-w-[800px] pt-8 pb-4">
+  <div class="card">
+    <!-- 头像、用户信息、统计数据 -->
+    <div class="row-top">
+      <div class="user-area">
+        <img class="avatar" src={siteConfig.avatar} alt={siteConfig.author} width="64" height="64" />
+        <div class="user-meta">
+          <div class="username">
+            {siteConfig.author}
+          </div>
+          <span class="bio">{siteConfig.description}</span>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-number">
+            {words.toLocaleString(numberLocale)}<span class="unit">{t('profile.wordsUnit')}</span>
+          </span>
+          <span class="stat-label">{t('profile.wordsLabel')}</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">
+            {hours.toLocaleString(numberLocale)}<span class="unit">{t('profile.hoursUnit')}</span>
+          </span>
+          <span class="stat-label">{t('profile.hoursLabel')}</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">
+            {articles.toLocaleString(numberLocale)}<span class="unit">{t('profile.articlesUnit')}</span>
+          </span>
+          <span class="stat-label">{t('profile.articlesLabel')}</span>
+        </div>
+        {statsEnabled && (
+          <div class="stats-extra">
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">
+                <span data-stats="site-pv">-</span><span class="unit">{t('profile.pvUnit')}</span>
+              </span>
+              <span class="stat-label">{t('profile.pvLabel')}</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">
+                <span data-stats="site-uv">-</span><span class="unit">{t('profile.uvUnit')}</span>
+              </span>
+              <span class="stat-label">{t('profile.uvLabel')}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- 社交按钮 -->
+    {
+      socials.length > 0 && (
+        <div class="row-social">
+          {socials.map((s) => (
+            <a
+              href={s.url}
+              class="social-btn"
+              style={`--p-brand:${s.brand}`}
+              target={isExternal(s.url) && !s.url.startsWith('mailto:') ? '_blank' : undefined}
+              rel={isExternal(s.url) && !s.url.startsWith('mailto:') ? 'noopener noreferrer' : undefined}
+            >
+              <Icon d={s.icon} />
+              <span>{s.label}</span>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</div>
+
