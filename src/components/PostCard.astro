@@ -2,9 +2,8 @@
 import '@/styles/PostCard.css'
 import Icon from '@/components/Icon.astro'
 import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
-import { mdiAccountOutline, mdiCalendarOutline, mdiEye, mdiUpdate } from '@/lib/icons'
+import { mdiCalendarOutline, mdiUpdate } from '@/lib/icons'
 import { excerptOf, formatDate, type Post, readMinutes, wordCount } from '@/lib/posts'
-import { siteConfig } from '@/lib/siteConfig'
 
 interface Props {
   lang?: Lang
@@ -25,7 +24,6 @@ const pinned = post.data.index > 0
 const postUrl = localePath(lang, `/posts/${post.id}`)
 const categoryUrl = localePath(lang, `/categories/${encodeURIComponent(category)}`)
 const tagUrl = (tag: string) => localePath(lang, `/tags/${encodeURIComponent(tag)}`)
-const statsEnabled = Boolean(siteConfig.statsScript)
 ---
 
 <article
@@ -69,19 +67,6 @@ const statsEnabled = Boolean(siteConfig.statsScript)
   }
 
   <div class="card-actions">
-    {
-      statsEnabled && (
-        <span
-          class="card-badge card-btn-adjacent"
-          data-stats-path={`/posts/${post.id}`}
-        >
-          <Icon d={mdiEye} class="mr-1 text-[11px]" />
-          <span data-stats="article-pv">-</span>
-          <Icon d={mdiAccountOutline} class="ml-2 mr-1 text-[11px]" />
-          <span data-stats="article-uv">-</span>
-        </span>
-      )
-    }
     <a href={postUrl} class="card-badge card-btn">{t('list.readMore')}</a>
   </div>
   {post.data.updated && <span class="card-badge card-btn-left"><Icon d={mdiUpdate} class="mr-1 text-[11px]" />{formatDate(post.data.updated)}</span>}

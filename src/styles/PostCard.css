@@ -53,17 +53,6 @@ article {
   position: static;
   border-radius: 12px 4px 12px 4px;
 }
-.card-btn-adjacent {
-  position: static;
-  border-radius: 4px 12px 4px 12px;
-  cursor: default;
-}
-.card-btn-adjacent:hover {
-  background: var(--wp-text);
-  color: var(--wp-bg);
-  transform: none;
-  box-shadow: none;
-}
 .card-btn-left {
   top: auto;
   left: -5px;
