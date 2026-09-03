@@ -174,41 +174,6 @@ const jsonLd =
       }
       bindNavStartSync()
 
-      const warmedUrls = new Set<string>()
-      function warmUrl(href: string | null, noCors: boolean) {
-        if (!href || href.startsWith('data:') || warmedUrls.has(href)) return
-        warmedUrls.add(href)
-        fetch(href, { priority: 'low', ...(noCors ? { mode: 'no-cors' as const } : {}) }).catch(
-          () => {},
-        )
-      }
-      function warmPageAssets(html: string) {
-        try {
-          const doc = new DOMParser().parseFromString(html, 'text/html')
-          doc.querySelectorAll('script[type="module"][src]').forEach((s) => {
-            warmUrl(s.getAttribute('src'), false)
-          })
-          doc.querySelectorAll('main img[src]').forEach((img, i) => {
-            if (i > 1) return
-            warmUrl(img.getAttribute('src'), true)
-          })
-        } catch {}
-      }
-      function bindAssetWarmup(attempt = 0) {
-        const swup = (window as any).swup
-        if (swup?.fetchPage) {
-          const original = swup.fetchPage.bind(swup)
-          swup.fetchPage = (...args: unknown[]) =>
-            (original as (...a: unknown[]) => Promise<{ html: string }>)(...args).then((page) => {
-              warmPageAssets(page.html)
-              return page
-            })
-        } else if (attempt < 100) {
-          window.setTimeout(() => bindAssetWarmup(attempt + 1), 100)
-        }
-      }
-      if (import.meta.env.PROD) bindAssetWarmup()
-
       document.addEventListener('astro:before-swap', () => {
         document.querySelectorAll('#toc-affix').forEach((el) => {
           if (!el.closest('#swup-container')) el.remove()

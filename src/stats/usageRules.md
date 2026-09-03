@@ -36,7 +36,7 @@ src/stats/
 | Injection Timing | When enabled in `config.yaml`, BaseLayout injects the client runtime (production only; dev automatically does not inject or send requests); on every page load (initial + Swup navigation), collects mount points for the current page and fills them |
 | Caching | sessionStorage + TTL (5 min in production / 1 min in dev): repeated visits / page transitions within the same browser session do not repeat requests; both success and failure are cached (failure is negative cache, no retry within TTL to avoid repeated requests to failing endpoints on refresh) |
 | Site-wide Reuse | When `getArticleStats` response includes `siteTotal`/`siteUnique` fields, they are reused directly, saving the `/total` request (article pages usually require only 1 request to fulfill both article and site-wide stats) |
-| Rate Limiting | Serial queue + minimum interval of 150ms between adjacent requests; per-page requests stay minimal since article stats render only on detail pages (one per article page) |
+| Rate Limiting | Serial queue + minimum interval of 150ms between adjacent requests; plugins may collapse further (e.g., visitor-stats routes all queries through `/total` with plugin-side TTL cache / in-flight dedup), so each page load issues at most 1 stats request |
 | Failover Graceful Degradation | Plugin errors / request failures: the corresponding mount point retains a "‑" placeholder; only console warnings are output |
 
 TTL and request gap are constants at the top of `client.ts` (`CACHE_TTL` / `REQUEST_GAP`), adjustable as needed.
@@ -69,8 +69,8 @@ export function getArticleStats(path: string): Promise<{
 ```
 
 - `path` parameter is the canonical path of the article page, e.g., `/posts/hello-world` (independent of language prefix, always starts with `/posts/`). The plugin may internally normalise more flexibly, but must be able to handle the standard `/posts/xxx` form.
-- Rendered in: the article reading page header after "Reading time" only (article cards on listing pages deliberately do not render per-article stats, keeping listing pages at zero per-article requests and avoiding rate-limit (HTTP 429) pressure on the stats service).
-- Suggestion: if your endpoint can return site-wide data alongside article data, do so (see visitor-stats `/page-stats`); the client will automatically reuse it, minimising requests per page.
+- Rendered in: the article card next to the "Read More" badge (listing pages), and in the article reading page header after "Reading time". Queries for multiple badges on listing pages are collapsed by the plugin into a single request (e.g., visitor-stats routes everything through `/total` with plugin-side TTL caching + in-flight dedup), so listing pages never hammer the stats service per-article.
+- Suggestion: prefer a single bulk endpoint that returns everything at once (see visitor-stats `/total`: site-wide + all-article list in one response); or attach site-wide data to the article response — the client will automatically reuse it, minimising requests per page.
 
 ### 3. `trackVisit(path?)` — Visit tracking/ping (optional)
 
@@ -95,7 +95,7 @@ When enabled, components render `data-stats` mount points, which are filled by `
 | Mount Point | Location | Filled Content |
 | --- | --- | --- |
 | `data-stats="site-pv"` / `"site-uv"` | ProfileCard | Site-wide total PV / UV |
-| `data-stats="article-pv"` / `"article-uv"` (container has `data-stats-path="/posts/xxx"`) | PostPage header | Article total PV / UV |
+| `data-stats="article-pv"` / `"article-uv"` (container has `data-stats-path="/posts/xxx"`) | PostCard badge, PostPage header | Article total PV / UV |
 
 Mount points are rendered along with the page (initial placeholder "‑"); after successful retrieval, the client fills in numbers; on failure, "‑" remains.
 

@@ -19,7 +19,10 @@ export function getLangFromUrl(url: URL): Lang {
 
 export function localePath(lang: Lang, path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`
-  return lang === defaultLang ? p : `/${lang}${p === '/' ? '' : p}`
+  const last = p.slice(p.lastIndexOf('/') + 1)
+  const isFile = last.includes('.')
+  const withSlash = p.length > 1 && !p.endsWith('/') && !isFile ? `${p}/` : p
+  return lang === defaultLang ? withSlash : `/${lang}${withSlash === '/' ? '' : withSlash}`
 }
 
 export function useTranslations(lang: Lang) {

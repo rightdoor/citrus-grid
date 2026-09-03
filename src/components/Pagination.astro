@@ -15,7 +15,8 @@ const t = useTranslations(lang)
 
 function pageUrl(page: number): string {
   const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
-  return page <= 1 ? `${base}/` : `${base}/${page}`
+  // 带尾斜杠，与 Cloudflare Pages canonical URL 一致（详见 src/i18n/ui.ts localePath 注释）
+  return page <= 1 ? `${base}/` : `${base}/${page}/`
 }
 
 function pages(): (number | '...')[] {
