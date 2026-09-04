@@ -52,7 +52,11 @@ function fetchTotal(): Promise<TotalResponse> {
       const raw = localStorage.getItem(TOTAL_CACHE_KEY)
       if (raw) {
         const hit = JSON.parse(raw) as { t: number; data: TotalResponse }
-        if (typeof hit.t === 'number' && typeof hit.data?.siteTotal === 'number' && Date.now() - hit.t <= TOTAL_CACHE_TTL) {
+        if (
+          typeof hit.t === 'number' &&
+          typeof hit.data?.siteTotal === 'number' &&
+          Date.now() - hit.t <= TOTAL_CACHE_TTL
+        ) {
           return hit.data
         }
       }
@@ -64,7 +68,9 @@ function fetchTotal(): Promise<TotalResponse> {
     const res = await fetch(`${STATS_BASE}/total`)
     const data = (await res.json()) as TotalResponse
     if (!res.ok) {
-      throw new Error(`请求失败 (${res.status}): ${(data as unknown as { error?: string }).error ?? 'unknown'}`)
+      throw new Error(
+        `请求失败 (${res.status}): ${(data as unknown as { error?: string }).error ?? 'unknown'}`,
+      )
     }
 
     // 3. 回写缓存

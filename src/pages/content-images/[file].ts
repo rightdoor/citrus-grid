@@ -49,7 +49,9 @@ export const GET: APIRoute = async ({ props }) => {
     return new Response(data, {
       headers: {
         'Content-Type': MIME[ext] ?? 'application/octet-stream',
-        'Cache-Control': import.meta.env.PROD ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
+        'Cache-Control': import.meta.env.PROD
+          ? 'public, max-age=31536000, immutable'
+          : 'public, max-age=3600',
       },
     })
   } catch {
