@@ -15,6 +15,7 @@ import { unified } from 'unified'
 import { rehypeCodeBlock } from './rehypeCodeBlock'
 import { rehypeExternalLinks } from './rehypeExternalLinks'
 import { rehypeImages } from './rehypeImages'
+import { rehypeRelativeLinks } from './rehypeRelativeLinks'
 import { rehypeTableWrap } from './rehypeTableWrap'
 import { remarkContainers } from './remarkContainers'
 
@@ -35,6 +36,7 @@ export async function renderMarkdownHtml(source: string, options: RenderOptions)
     .use(rehypeKatex)
     .use(rehypeCodeBlock)
     .use(rehypeImages)
+    .use(rehypeRelativeLinks)
     .use(rehypeTableWrap)
     .use(rehypeExternalLinks, { site: options.site })
     .use(rehypeSlug)

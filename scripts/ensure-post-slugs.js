@@ -1,9 +1,13 @@
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pinyin } from 'pinyin-pro'
 
-const POSTS_DIR = fileURLToPath(new URL('../src/content/posts', import.meta.url))
+const THIS_FILE = fileURLToPath(import.meta.url)
+const CONTENT_ROOT = path.join(path.dirname(THIS_FILE), '..', 'src', 'content')
+const POSTS_DIR = path.join(CONTENT_ROOT, 'posts')
+const INDEX_FILE = path.join(path.dirname(THIS_FILE), '..', '.generated', 'post-index.json')
+mkdirSync(path.dirname(INDEX_FILE), { recursive: true })
 
 export function titleToSlug(title) {
   const parts = pinyin(String(title), {
@@ -35,27 +39,46 @@ function collectMdFiles(dir) {
   return files
 }
 
+function parseFrontmatter(raw) {
+  const fm = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? ''
+  return {
+    title: fm.match(/^title:\s*['"]?(.+?)['"]?\s*$/m)?.[1] ?? '',
+    slug: fm.match(/^slug:\s*['"]?([a-z0-9-]+)['"]?\s*$/m)?.[1],
+    draft: /^draft:\s*true\s*$/m.test(fm),
+  }
+}
+
 export function ensurePostSlugs() {
   return {
     name: 'ensure-post-slugs',
     buildStart() {
+      const records = []
       const used = new Set()
-      const missing = []
       for (const full of collectMdFiles(POSTS_DIR)) {
         const raw = readFileSync(full, 'utf-8')
-        const fm = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? ''
-        const slug = fm.match(/^slug:\s*['"]?([a-z0-9-]+)['"]?\s*$/m)?.[1]
-        if (slug) used.add(slug)
-        else missing.push(full)
+        const fm = parseFrontmatter(raw)
+        records.push({
+          full,
+          rel: path.relative(CONTENT_ROOT, full).split(path.sep).join('/'),
+          raw,
+          title: fm.title,
+          slug: fm.slug,
+          draft: fm.draft,
+        })
+        if (fm.slug) used.add(fm.slug)
       }
-      for (const full of missing) {
-        const raw = readFileSync(full, 'utf-8')
-        const title = raw.match(/^title:\s*['"]?(.+?)['"]?\s*$/m)?.[1] ?? ''
-        const base = titleToSlug(title)
+
+      for (const rec of records) {
+        if (rec.slug) continue
+        const base = titleToSlug(rec.title)
         let slug = base
         for (let n = 1; used.has(slug); n += 1) slug = `${base}-${n}`
         if (!SLUG_RE.test(slug)) slug = 'post'
+        while (used.has(slug)) slug = `${slug}-${Date.now().toString(36).slice(-4)}`
         used.add(slug)
+        rec.slug = slug
+
+        const raw = rec.raw
         const eol = raw.includes('\r\n') ? '\r\n' : '\n'
         let updated
         if (/^slug:.*$/m.test(raw)) {
@@ -65,9 +88,17 @@ export function ensurePostSlugs() {
             ? raw.replace(/^title:.*(?:\r?\n)/m, (m) => `${m}slug: ${slug}${eol}`)
             : raw.replace(/^---\r?\n/, (m) => `${m}slug: ${slug}${eol}`)
         }
-        writeFileSync(full, updated, 'utf-8')
-        // 已补充 slug:
-        console.log(`[post-slug] slug filled: ${path.relative(POSTS_DIR, full)} -> ${slug}`)
+        writeFileSync(rec.full, updated, 'utf-8')
+        console.log(`[post-slug] slug filled: ${path.relative(POSTS_DIR, rec.full)} -> ${slug}`)
+      }
+
+      const index = records
+        .map(({ rel, slug, draft }) => ({ file: rel, slug, draft }))
+        .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0))
+      const next = `${JSON.stringify(index, null, 2)}\n`
+      if (!existsSync(INDEX_FILE) || readFileSync(INDEX_FILE, 'utf-8') !== next) {
+        writeFileSync(INDEX_FILE, next, 'utf-8')
+        console.log(`[post-slug] post-index written: ${index.length} entries`)
       }
     },
   }

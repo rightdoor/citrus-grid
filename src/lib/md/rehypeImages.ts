@@ -1,11 +1,11 @@
 import { readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import type { Nodes, Root } from 'hast'
 
 import { resolveContentImage } from '../contentImages'
+import { resolveFilePath, type VFileLike } from './vfile'
 
-const LQIP_FILE = path.resolve(process.cwd(), 'src/lib/md/lqips.json')
+const LQIP_FILE = path.resolve(process.cwd(), '.generated/lqips.json')
 
 let lqipCache: { mtimeMs: number; data: Record<string, string> } | null = null
 
@@ -34,22 +34,6 @@ function escapeAttr(value: string) {
     .replace(/"/g, '&quot;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-}
-
-interface VFileLike {
-  path?: string | URL
-  history?: string[]
-}
-
-function resolveFilePath(file: VFileLike): string {
-  const raw = file.path || file.history?.[0] || ''
-  const rawStr = typeof raw === 'string' ? raw : raw.href
-  if (!rawStr) return ''
-  try {
-    return rawStr.startsWith('file:') ? fileURLToPath(rawStr) : rawStr
-  } catch {
-    return ''
-  }
 }
 
 function transform(

@@ -1,13 +1,14 @@
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const THIS_FILE = fileURLToPath(import.meta.url)
 const POSTS_DIR = path.join(path.dirname(THIS_FILE), '..', 'src', 'content', 'posts')
 const CONTENT_ROOT = path.join(path.dirname(THIS_FILE), '..', 'src', 'content')
-const OUT_FILE = path.join(path.dirname(THIS_FILE), '..', 'src', 'lib', 'md', 'lqips.json')
+const OUT_FILE = path.join(path.dirname(THIS_FILE), '..', '.generated', 'lqips.json')
+mkdirSync(path.dirname(OUT_FILE), { recursive: true })
 
 const IMG_SRC_RE = /!\[[^\]]*\]\(\s*([^)\s]+)(?:\s+"[^"]*")?\s*\)/g
 

@@ -17,6 +17,7 @@ import { generateLqips } from './scripts/generate-lqips.js'
 import { rehypeCodeBlock } from './src/lib/md/rehypeCodeBlock.ts'
 import { rehypeExternalLinks } from './src/lib/md/rehypeExternalLinks.ts'
 import { rehypeImages } from './src/lib/md/rehypeImages.ts'
+import { rehypeRelativeLinks } from './src/lib/md/rehypeRelativeLinks.ts'
 import { rehypeTableWrap } from './src/lib/md/rehypeTableWrap.ts'
 import { remarkContainers } from './src/lib/md/remarkContainers.ts'
 
@@ -56,6 +57,7 @@ export default defineConfig({
         rehypeKatex,
         rehypeCodeBlock,
         rehypeImages,
+        rehypeRelativeLinks,
         rehypeTableWrap,
         [rehypeExternalLinks, { site }],
         rehypeSlug,

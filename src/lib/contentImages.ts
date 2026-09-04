@@ -25,18 +25,31 @@ export function contentImageName(rel: string): string {
   return `${hash}${ext}`
 }
 
-function isRelativeSrc(src: string): boolean {
+export function isRelativeSrc(src: string): boolean {
   return Boolean(src) && !/^(?:[a-z][a-z0-9+.-]*:|\/\/|\/|#)/i.test(src)
 }
 
-export function resolveContentImage(src: string, filePath: string): string | null {
+export function isInContentDir(filePath: string): boolean {
+  const segments = filePath.split(path.sep).join('/').split('/')
+  return segments.some((s, i) => s === 'content' && segments[i - 1] === 'src')
+}
+
+function safeDecode(src: string): string {
+  try {
+    return decodeURIComponent(src)
+  } catch {
+    return src
+  }
+}
+
+export function resolveContentPath(src: string, filePath: string): string | null {
   if (!isRelativeSrc(src)) return null
   const segments = filePath.split(path.sep).join('/').split('/')
   const contentIdx = segments.findIndex((s, i) => s === 'content' && segments[i - 1] === 'src')
   if (contentIdx === -1) return null
 
   const joined = segments.slice(0, -1)
-  for (const part of src.split('/')) {
+  for (const part of safeDecode(src).split('/')) {
     if (part === '' || part === '.') continue
     if (part === '..') {
       joined.pop()
@@ -46,7 +59,11 @@ export function resolveContentImage(src: string, filePath: string): string | nul
   }
   if (joined.length <= contentIdx + 1 || joined[contentIdx] !== 'content') return null
 
-  const rel = joined.slice(contentIdx + 1).join('/')
-  if (!isContentImageFile(rel)) return null
+  return joined.slice(contentIdx + 1).join('/')
+}
+
+export function resolveContentImage(src: string, filePath: string): string | null {
+  const rel = resolveContentPath(src, filePath)
+  if (!rel || !isContentImageFile(rel)) return null
   return `${CONTENT_IMAGE_PREFIX}/${contentImageName(rel)}`
 }
