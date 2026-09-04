@@ -243,13 +243,9 @@ html.is-leaving .transition-swup-fade {
   transition-duration: 0.06s;
 }
 body > .swup-progress-bar {
-  top: 60px;
+  top: 0;
+  z-index: 200;
   background-color: var(--wp-accent);
-}
-@media (width < 48rem) {
-  body > .swup-progress-bar {
-    top: 52px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .transition-swup-fade {
