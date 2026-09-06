@@ -107,7 +107,7 @@ draft: false
 | `category` | 是 | "示例" | 文章分类 |
 | `tags` | 是 | [Markdown] | 文章标签，多个标签用逗号隔开 |
 | `published` | 是 | 2026-01-01 00:01:02 | 文章发布时间，格式为`YYYY-MM-DD HH:mm:ss`，脚本生成自带 |
-| `updated` | 否 | 2026-01-01 00:01:03 | 文章更新时间，格式为`YYYY-MM-DD HH:mm:ss`，不自动生成 |
+| `updated` | 否 | 2026-01-01 00:01:03 | 文章更新时间，格式为`YYYY-MM-DD HH:mm:ss`，启动和构建时由脚本按文件修改时间自动写入（可在 `site.config.ts` 关闭） |
 | `draft` | 否 | false | 是否草稿，不自动生成 |
 
 ## 🧞 命令说明
