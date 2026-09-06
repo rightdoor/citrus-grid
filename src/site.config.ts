@@ -69,4 +69,8 @@ export const siteConfig = {
   // 评论脚本，脚本位于 src/comments/ 目录，契约详见 src/comments/使用规则.md ，留空不启用评论区
   // Comment script. Scripts live in src/comments/, see src/comments/usageRules.md for the adapter contract. Leave empty to disable the comment section
   commentScript: 'utterances',
+
+  // 根据文件保存时间自动更新文章的 updated 字段，仅在启动和构建时更新
+  // Auto-update each post's `updated` field from its file save time only updated during startup and build
+  autoUpdatePostUpdated: true,
 }

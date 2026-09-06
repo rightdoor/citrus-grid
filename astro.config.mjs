@@ -11,6 +11,7 @@ import remarkEmoji from 'remark-emoji'
 import remarkMath from 'remark-math'
 import { ensurePostSlugs } from './scripts/ensure-post-slugs.js'
 import { generateLqips } from './scripts/generate-lqips.js'
+import { updatePostUpdated } from './scripts/update-post-updated.js'
 import { rehypeCodeBlock } from './src/lib/md/rehypeCodeBlock.ts'
 import { rehypeExternalLinks } from './src/lib/md/rehypeExternalLinks.ts'
 import { rehypeImages } from './src/lib/md/rehypeImages.ts'
@@ -83,7 +84,7 @@ export default defineConfig({
     sitemap(),
   ],
   vite: {
-    plugins: [tailwindcss(), ensurePostSlugs(), generateLqips()],
+    plugins: [tailwindcss(), ensurePostSlugs(), generateLqips(), updatePostUpdated({ enabled: siteConfig.autoUpdatePostUpdated })],
     optimizeDeps: {
       include: ['photoswipe', 'photoswipe/lightbox', 'astro/virtual-modules/transitions-*.js'],
     },
