@@ -1,7 +1,7 @@
 // ============================================================
 // 统计插件：visitor-stats（Cloudflare Worker 统计服务示例实现）
 // 接口契约详见同目录《使用规则.md》
-// 启用方式：config.yaml 中 statsScript: 'visitor-stats'
+// 启用方式：site.config.ts 中 statsScript: 'visitor-stats'
 //
 // 查询统一走 /total：一次请求返回全站累计 + 全部文章累计列表，
 // 插件内部做「模块级 in-flight 去重 + localStorage TTL 缓存」，

@@ -1,15 +1,15 @@
 # Statistics Script (Plugin) Usage Rules
 
-This directory is CitrusGrid's statistics plugin directory. The site itself does not have any built-in statistics service; it only provides a set of browser-side injection interfaces. Statistics capabilities are provided by scripts (plugins) in this directory, similar to a plugin mechanism: place a script into this directory and fill in the script name in `config.yaml` to complete the integration.
+This directory is CitrusGrid's statistics plugin directory. The site itself does not have any built-in statistics service; it only provides a set of browser-side injection interfaces. Statistics capabilities are provided by scripts (plugins) in this directory, similar to a plugin mechanism: place a script into this directory and fill in the script name in `site.config.ts` to complete the integration.
 
 ## I. Enabling and Disabling
 
-In the site's sole configuration source `src/config.yaml`:
+In the site's sole configuration source `src/site.config.ts`:
 
-```yaml
-# Statistics script name (without extension), corresponding to <script-name>.ts in this directory
-statsScript: 'visitor-stats'   # Enabled: loads src/stats/visitor-stats.ts
-statsScript: ''                # Disabled (default): no script is injected, no stats mount points on the page, no stats requests sent
+```ts
+// Statistics script name (without extension), corresponding to <script-name>.ts in this directory
+statsScript: 'visitor-stats',  // Enabled: loads src/stats/visitor-stats.ts
+statsScript: '',               // Disabled (default): no script is injected, no stats mount points on the page, no stats requests sent
 ```
 
 Rules:
@@ -33,7 +33,7 @@ src/stats/
 | Mechanism | Description |
 | --- | --- |
 | Tracking/Ping | When the plugin exports `trackVisit`, the client calls it once on every page load (initial full page + Swup navigation) to record a visit to the stats service (fire-and-forget, no caching, no rate limiting) |
-| Injection Timing | When enabled in `config.yaml`, BaseLayout injects the client runtime (production only; dev automatically does not inject or send requests); on every page load (initial + Swup navigation), collects mount points for the current page and fills them |
+| Injection Timing | When enabled in `site.config.ts`, BaseLayout injects the client runtime (production only; dev automatically does not inject or send requests); on every page load (initial + Swup navigation), collects mount points for the current page and fills them |
 | Caching | sessionStorage + TTL (5 min in production / 1 min in dev): repeated visits / page transitions within the same browser session do not repeat requests; both success and failure are cached (failure is negative cache, no retry within TTL to avoid repeated requests to failing endpoints on refresh) |
 | Site-wide Reuse | When `getArticleStats` response includes `siteTotal`/`siteUnique` fields, they are reused directly, saving the `/total` request (article pages usually require only 1 request to fulfill both article and site-wide stats) |
 | Rate Limiting | Serial queue + minimum interval of 150ms between adjacent requests; plugins may collapse further (e.g., visitor-stats routes all queries through `/total` with plugin-side TTL cache / in-flight dedup), so each page load issues at most 1 stats request |
@@ -102,7 +102,7 @@ Mount points are rendered along with the page (initial placeholder "‑"); after
 ## VI. Writing Your Own Plugin (Example Skeleton)
 
 ```ts
-// src/stats/my-stats.ts — set statsScript: 'my-stats' in config.yaml to enable
+// src/stats/my-stats.ts — set statsScript: 'my-stats' in site.config.ts to enable
 
 export function trackVisit(path: string = location.pathname) {
   // fire-and-forget: fail silently, does not affect the page

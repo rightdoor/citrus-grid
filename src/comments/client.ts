@@ -1,5 +1,5 @@
 /**
-  评论客户端运行时（由 Comments.astro 在 config.yaml commentScript 启用时注入）。
+  评论客户端运行时（由 Comments.astro 在 site.config.ts commentScript 启用时注入）。
 
   工作方式：每次页面加载（首次整页 + Swup 导航，经 onPageLoad）查找评论区挂载点
   （[data-comment-script]），用 IntersectionObserver 监听评论区临近视口时才动态

@@ -1,7 +1,7 @@
 /**
   测试用统计插件：随机生成全站与文章的 PV / UV 数字，用于本地调整统计显示效果。
 
-  启用：config.yaml 填 statsScript: 'random-visitor'（仅生产环境注入，dev 不生效）。
+  启用：site.config.ts 填 statsScript: 'random-visitor'（仅生产环境注入，dev 不生效）。
   注意 client.ts 有 TTL 缓存（生产 5 分钟），TTL 内换页数字保持不变；清掉 sessionStorage
   或等 TTL 过期即可看到新随机数。测试完记得换回正式统计脚本或留空停用。
 */

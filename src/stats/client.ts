@@ -1,5 +1,5 @@
 /**
-  统计客户端运行时（由 BaseLayout 在 config.yaml statsScript 启用时注入）。
+  统计客户端运行时（由 BaseLayout 在 site.config.ts statsScript 启用时注入）。
 
   工作方式：每次页面加载（首次整页 + Swup 导航，经 onPageLoad）先调用插件的trackVisit（若导出）记录一次访问，再收集当前页的统计挂载点（[data-stats]），按需向统计插件请求数据并填充数字。因此数字随每次访问实时更新，不再烙印在构建产物里。
 

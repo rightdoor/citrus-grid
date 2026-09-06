@@ -1,15 +1,15 @@
 # Comment Adapter Rules
 
-This directory holds CitrusGrid's comment adapters. The site itself ships with no comment system — only a unified browser-side comment interface. Actual commenting capability is provided by adapters in this directory (one standalone ts file per comment system), plug-and-play style: drop an adapter here, put its name in `config.yaml`, and it is wired up. The site body depends only on the interface, never on any specific comment system.
+This directory holds CitrusGrid's comment adapters. The site itself ships with no comment system — only a unified browser-side comment interface. Actual commenting capability is provided by adapters in this directory (one standalone ts file per comment system), plug-and-play style: drop an adapter here, put its name in `site.config.ts`, and it is wired up. The site body depends only on the interface, never on any specific comment system.
 
 ## 1. Enabling and Disabling
 
-In the single source of site config `src/config.yaml`:
+In the single source of site config `src/site.config.ts`:
 
-```yaml
-# Comment adapter name (without extension), matching <name>.ts in this directory
-commentScript: 'utterances'   # Enabled: uses src/comments/utterances.ts
-commentScript: ''             # Disabled (default): no comment section, no scripts, no requests
+```ts
+// Comment adapter name (without extension), matching <name>.ts in this directory
+commentScript: 'utterances',  // Enabled: uses src/comments/utterances.ts
+commentScript: '',            // Disabled (default): no comment section, no scripts, no requests
 ```
 
 Rules:
@@ -17,7 +17,7 @@ Rules:
 - The value is the adapter file name (without the `.ts` suffix), e.g. `utterances`;
 - Empty (default) fully disables: no comment section is rendered, the comment runtime is not loaded, no requests are made;
 - An invalid name or missing file never throws — it only logs a console warning and is treated as disabled;
-- Comment-system-specific settings (e.g. utterances' repo) do **not** go into config.yaml; they live in the settings block at the top of the adapter ts file (see section 5).
+- Comment-system-specific settings (e.g. utterances' repo) do **not** go into site.config.ts; they live in the settings block at the top of the adapter ts file (see section 5).
 
 ## 2. Directory Structure
 
@@ -33,7 +33,7 @@ src/comments/
 | Mechanism | Description |
 | --- | --- |
 | Lazy loading | The comment mount point is watched by an IntersectionObserver; the adapter loads only when the section approaches the viewport (300px early). While comments sit below the fold, the first screen requests nothing comment-related. Falls back to immediate loading when IntersectionObserver is unavailable |
-| Code splitting | `import.meta.glob` turns every adapter into its own chunk; only the one named in config.yaml is ever fetched. Adapter modules are cached per browser session, so Swup navigations never refetch |
+| Code splitting | `import.meta.glob` turns every adapter into its own chunk; only the one named in site.config.ts is ever fetched. Adapter modules are cached per browser session, so Swup navigations never refetch |
 | Placeholder | The comment section is server-rendered (min height + shimmer skeleton); the skeleton is removed once the adapter renders its first content node, so there is no layout shift during loading |
 | Async loading | Both the adapter chunk and third-party scripts (e.g. utteranc.es/client.js) are injected asynchronously, never blocking the page |
 | Theme sync | The runtime listens to the global `theme-change` event and forwards it to the adapter's `onThemeChange`; the adapter syncs its own widget |
@@ -82,7 +82,7 @@ export function unmountComment(): void
 
 ## 5. Settings Block Convention
 
-Comment-system-specific settings live in the settings block at the top of the adapter ts file, **not in config.yaml**: the comment entry in config.yaml only decides which adapter to use — nothing else. Field names and defaults are up to each adapter; comments must explain every field and how to fill it in.
+Comment-system-specific settings live in the settings block at the top of the adapter ts file, **not in site.config.ts**: the comment entry in site.config.ts only decides which adapter to use — nothing else. Field names and defaults are up to each adapter; comments must explain every field and how to fill it in.
 
 ## 6. Mount Points (handled by the framework; adapter authors need not care)
 
@@ -96,10 +96,10 @@ The skeleton is removed when the mount container gains its first non-`script` ch
 
 ## 7. Writing Your Own Adapter (example skeleton)
 
-Using giscus as an example: create `src/comments/giscus.ts`, then set `commentScript: 'giscus'` in config.yaml — done:
+Using giscus as an example: create `src/comments/giscus.ts`, then set `commentScript: 'giscus'` in site.config.ts — done:
 
 ```ts
-// src/comments/giscus.ts —— set commentScript: 'giscus' in config.yaml to enable
+// src/comments/giscus.ts —— set commentScript: 'giscus' in site.config.ts to enable
 
 // ========== Settings ==========
 const config = {
