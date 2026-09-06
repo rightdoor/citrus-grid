@@ -28,7 +28,7 @@ export const siteConfig = {
   logo: '/logo.webp',
 
   // 作者 Author name
-  author: 'RightDoor',
+  author: 'example name',
 
   // 默认语言： zh 、 ja 、 en
   // Default language: zh, ja, en
@@ -47,7 +47,7 @@ export const siteConfig = {
   // 没有独立设置图标的使用通用链接图标
   // Platforms without a dedicated icon fall back to a generic link icon
   socials: [
-    { platform: 'github', url: 'https://github.com/rightdoor' },
+    { platform: 'github', url: 'https://github.com' },
     { platform: 'rss', url: '/rss.xml' },
   ] as SocialLink[],
 
@@ -59,16 +59,16 @@ export const siteConfig = {
   // Friend links. Set to an empty array [] to show an empty state. Icons go under public/friends/ and are referenced as /friends/filename.ext
   friends: [
     {
-      url: 'https://www.endlesssolo.com',
-      name: '我的博客',
-      desc: '我的个人博客',
-      icon: '/friends/endlesssolo.webp',
+      url: 'https://example.com',
+      name: 'test',
+      desc: 'a desc',
+      icon: '/friends/logo.webp',
     },
   ] as FriendLinkRaw[],
 
   // 评论脚本，脚本位于 src/comments/ 目录，契约详见 src/comments/使用规则.md ，留空不启用评论区
   // Comment script. Scripts live in src/comments/, see src/comments/usageRules.md for the adapter contract. Leave empty to disable the comment section
-  commentScript: 'utterances',
+  commentScript: '',
 
   // 根据文件保存时间自动更新文章的 updated 字段，仅在启动和构建时更新
   // Auto-update each post's `updated` field from its file save time only updated during startup and build

@@ -10,7 +10,7 @@
 const config = {
   // 必填：接收评论的公开 GitHub 仓库，格式 '用户名/仓库名'（需在该仓库安装 utterances App）。
   // 留空则评论区停用（控制台会提示）。
-  repo: 'rightdoor/my-comment',
+  repo: '',
   // 评论与页面的映射方式：'pathname'（推荐，按页面路径建 Issue）、'url'、'title' 等
   issueTerm: 'pathname',
   // 可选：为自动创建的 Issue 打标签（标签需已存在于仓库），留空不打
