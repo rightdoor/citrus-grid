@@ -5,6 +5,7 @@ description: "展示 Markdown 元数据的使用方法"
 category: "示例"
 tags: [Markdown]
 published: 2026-09-03 00:06:34
+updated: 2026-09-03 22:55:21
 ---
 
 ## 文章 Frontmatter
