@@ -36,24 +36,81 @@
 
 ---
 
-## 快速开始
+## 🚀 快速开始
 
-1、克隆本项目(记得给本项目点个Star👍)
+### 环境要求
+
+- Node.js ≥ 22.14.0
+- Astro ≥ 7.2.9
+
+### 本地开发部署
+
+1. 克隆仓库：
 
 ```bash
 git clone https://github.com/rightdoor/citrus-grid.git
+cd citrus-grid
 ```
 
-2、安装依赖及运行
+2. 安装依赖
 
 ```bash
+# 本项目使用 pnpm 安装依赖，如果没有安装请先安装
+npm install -g pnpm
+
 pnpm install
-pnpm dev
-pnpm build
-pnpm preview
 ```
 
-## 命令说明
+3. 配置博客：
+
+编辑 `src/site.config.ts` 自定义博客设置
+
+4. 启动开发服务器：
+
+```bash
+pnpm dev
+```
+
+访问 `http://localhost:4321` 即可查看博客效果
+
+### 平台托管部署
+
+- [Astro 部署指南](https://docs.astro.build/guides/deploy/)
+- 网页部署请使用 `pnpm build` 命令构建网站，随后将 `dist` 目录部署至目标平台。
+
+## 📖 配置说明
+
+详细内容请查看配置文件 [site.config.ts](src/site.config.ts)。
+
+## ⚙️ 文章 Frontmatter
+
+```markdown
+---
+title: example
+slug: example
+index: 0
+description:  example description
+category: example
+tags: [example, example1]
+published: 2026-01-01 00:01:02
+updated: 2026-01-01 00:01:03
+draft: false
+---
+```
+
+| 字段 | 是否必填 | 示例 | 描述 |
+| --- | --- | --- | --- |
+| `title` | 是 | "example" | 文章标题 |
+| `slug` | 是 | example | 运行时自动生成，可手动填写，使用`-`分隔单词 |
+| `index` | 是 | 0 | 默认为0不置顶，大于0的整数置顶，数值越大越靠前 |
+| `description` | 是 | "展示 Markdown 语法的各种类型和示例" | 文章描述 |
+| `category` | 是 | "示例" | 文章分类 |
+| `tags` | 是 | [Markdown] | 文章标签，多个标签用逗号隔开 |
+| `published` | 是 | 2026-01-01 00:01:02 | 文章发布时间，格式为`YYYY-MM-DD HH:mm:ss`，脚本生成自带 |
+| `updated` | 否 | 2026-01-01 00:01:03 | 文章更新时间，格式为`YYYY-MM-DD HH:mm:ss`，不自动生成 |
+| `draft` | 否 | false | 是否草稿，不自动生成 |
+
+## 🧞 命令说明
 
 | 命令 | 作用 |
 | --- | --- |
@@ -69,24 +126,6 @@ pnpm preview
 | `pnpm lint` | Biome 检查并修复 `src` |
 | `preinstall` | 自动执行 `only-allow pnpm`，强制使用 pnpm |
 
-## 配置
-
-详细内容请查看配置文件 [config.yaml](src/config.yaml)，预设配置请参考 `src/lib/siteConfig.ts`。
-
-## 文章 Frontmatter
-
-| 字段 | 是否必填 | 示例 | 描述 |
-| --- | --- | --- | --- |
-| `title` | 是 | "example" | 文章标题 |
-| `slug` | 是 | example | 运行时自动生成，可手动填写，使用`-`分隔单词 |
-| `index` | 是 | 0 | 默认为0不置顶，大于0的整数置顶，数值越大越靠前 |
-| `description` | 是 | "展示 Markdown 语法的各种类型和示例" | 文章描述 |
-| `category` | 是 | "示例" | 文章分类 |
-| `tags` | 是 | [Markdown] | 文章标签，多个标签用逗号隔开 |
-| `published` | 是 | 2026-01-01 00:01:02 | 文章发布时间，格式为`YYYY-MM-DD HH:mm:ss`，脚本生成自带 |
-| `updated` | 否 | 2026-01-01 00:01:03 | 文章更新时间，格式为`YYYY-MM-DD HH:mm:ss`，不自动生成 |
-| `draft` | 否 | false | 是否草稿，不自动生成 |
-
 ## 功能
 
 - [x] i18n 支持（zh、en、ja三语）
@@ -94,7 +133,7 @@ pnpm preview
 - [x] 支持 KaTeX 数学公式
 - [x] 明暗主题切换
 - [x] 搜索功能（pagefind）
-- [x] 评论功能（当前只支持 utterances 评论）
+- [x] 评论功能（评论系统可插拔，当前适配 utterances）
 - [x] 目录功能（桌面端侧边固定 + 移动端弹窗）
 - [x] RSS 订阅功能
 - [x] 友链功能
@@ -103,6 +142,12 @@ pnpm preview
 - [x] 阅读统计（已预留接口）
 
 ## 插件
+
+### 评论插件
+
+当前适配 utterances 评论系统，支持自定义评论插件。
+
+支持自定义评论插件，详细参考 [评论插件](src/comments/使用规则.md)。
 
 ### 统计插件
 
