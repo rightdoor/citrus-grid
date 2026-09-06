@@ -1,11 +1,8 @@
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { unified } from '@astrojs/markdown-remark'
 import sitemap from '@astrojs/sitemap'
 import swup from '@swup/astro'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
-import { load as loadYaml } from 'js-yaml'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypeKatex from 'rehype-katex'
 import rehypeSlug from 'rehype-slug'
@@ -20,24 +17,9 @@ import { rehypeImages } from './src/lib/md/rehypeImages.ts'
 import { rehypeRelativeLinks } from './src/lib/md/rehypeRelativeLinks.ts'
 import { rehypeTableWrap } from './src/lib/md/rehypeTableWrap.ts'
 import { remarkContainers } from './src/lib/md/remarkContainers.ts'
+import { siteConfig } from './src/site.config.ts'
 
-const configFile = readFileSync(
-  fileURLToPath(new URL('./src/config.yaml', import.meta.url)),
-  'utf-8',
-)
-
-let cfg
-try {
-  cfg = loadYaml(configFile) ?? {}
-} catch (err) {
-  // [CitrusGrid] config.yaml 不是合法的 YAML，无法启动：
-  throw new Error(`[CitrusGrid] config.yaml invalid YAML, cannot start:\n${err.message}`)
-}
-
-const site =
-  typeof cfg.url === 'string' && cfg.url.trim() !== ''
-    ? cfg.url.trim()
-    : 'https://citrusgrid.pages.dev'
+const site = siteConfig.url
 
 export default defineConfig({
   site,

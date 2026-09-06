@@ -4,7 +4,7 @@ import HomePage from '@/components/pages/HomePage.astro'
 import { defaultLang, localePath, useTranslations } from '@/i18n/ui'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { getPublishedPosts, type Post } from '@/lib/posts'
-import { siteConfig } from '@/lib/siteConfig'
+import { siteConfig } from '@/site.config'
 
 export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
   const posts = await getPublishedPosts()

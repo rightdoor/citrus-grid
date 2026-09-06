@@ -2,7 +2,7 @@ import rss from '@astrojs/rss'
 import { defaultLang } from '@/i18n/ui'
 import { renderMarkdownHtml } from '@/lib/md/pipeline'
 import { getPublishedPosts, type Post } from '@/lib/posts'
-import { siteConfig } from '@/lib/siteConfig'
+import { siteConfig } from '@/site.config'
 
 function absolutize(html: string, post: Post, site: string): string {
   const base = `${site.replace(/\/+$/, '')}/posts/${post.id}/`

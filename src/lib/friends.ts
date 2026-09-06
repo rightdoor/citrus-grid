@@ -1,4 +1,4 @@
-import { loadConfig } from '@/lib/serverConfig'
+import { siteConfig } from '@/site.config'
 
 export interface FriendLink {
   url: string
@@ -8,7 +8,7 @@ export interface FriendLink {
 }
 
 export function getFriendLinks(): FriendLink[] {
-  const list = loadConfig().friends ?? []
+  const list = siteConfig.friends
   return list.map((f) => {
     const rawUrl = (f.url || '').trim()
     const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`

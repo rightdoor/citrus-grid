@@ -52,7 +52,7 @@ const cards = friends.map((f) => {
           <path class="friend-tear" d="M75.5 61 c0 0 -4.5 5.5 -4.5 8.5 a4.5 4.5 0 0 0 9 0 c0 -3 -4.5 -8.5 -4.5 -8.5 z" fill="var(--wp-safe-blue)" />
         </svg>
         <p class="friend-empty-title">{t('friends.emptyTitle')}</p>
-        <p class="friend-empty-sub" set:html={t('friends.emptySub', { config: '<code>src/config.yaml</code>' })} />
+        <p class="friend-empty-sub" set:html={t('friends.emptySub', { config: '<code>src/site.config.ts</code>' })} />
       </div>
     ) : (
       <div class="grid gap-4 sm:grid-cols-2">

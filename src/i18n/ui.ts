@@ -1,4 +1,4 @@
-import { loadConfig } from '@/lib/serverConfig'
+import { siteConfig } from '@/site.config'
 import en from './en.json'
 import ja from './ja.json'
 import zh from './zh.json'
@@ -6,7 +6,7 @@ import zh from './zh.json'
 export type Lang = 'zh' | 'ja' | 'en'
 
 export const langs: Lang[] = ['zh', 'ja', 'en']
-export const defaultLang: Lang = (loadConfig().defaultLang as Lang) || 'zh'
+export const defaultLang: Lang = siteConfig.defaultLang
 
 const messages: Record<Lang, Record<string, unknown>> = { zh, ja, en }
 
