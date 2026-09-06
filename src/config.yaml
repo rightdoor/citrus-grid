@@ -55,7 +55,8 @@ friends:
     desc: 我的个人博客
     icon: /friends/endlesssolo.webp
 
-# Utterances 评论，基于 https://utteranc.es ，留空则不启用评论区
-# Utterances comments based on https://utteranc.es. Leave empty to disable the comment section
-utterances:
-  repo: 'RightDoor/my-comment'
+# 评论脚本，脚本位于 src/comments/ 目录，契约详见 src/comments/使用规则.md
+# Comment script. Scripts live in src/comments/, see src/comments/usageRules.md for the adapter contract
+# 留空则不启用评论区
+# Leave empty to disable the comment section
+commentScript:

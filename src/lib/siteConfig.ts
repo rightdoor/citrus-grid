@@ -16,6 +16,6 @@ export const siteConfig = {
   postsPerPage: Number(config.postsPerPage) || 10,
   socials: config.socials ?? [],
   statsScript: String(config.statsScript || '').trim(),
-  utterances: config.utterances ?? { repo: '' },
+  commentScript: String(config.commentScript || '').trim(),
 }
 export type SiteConfig = typeof siteConfig

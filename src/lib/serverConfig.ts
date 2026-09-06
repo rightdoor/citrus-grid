@@ -16,7 +16,7 @@ export interface RawConfig {
   socials?: Array<{ platform: string; url: string }>
   statsScript?: string
   friends?: Array<{ url: string; name?: string; desc?: string; icon?: string }>
-  utterances?: { repo?: string }
+  commentScript?: string
   [key: string]: unknown
 }
 

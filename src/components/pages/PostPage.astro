@@ -3,8 +3,8 @@ import { render } from 'astro:content'
 import 'katex/dist/katex.min.css'
 import 'photoswipe/style.css'
 import '@/styles/PostPage.css'
+import Comments from '@/components/Comments.astro'
 import Icon from '@/components/Icon.astro'
-import Utterances from '@/components/Utterances.astro'
 import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
 import {
   mdiAccountOutline,
@@ -219,8 +219,7 @@ const postYear = post.data.published.getFullYear()
     </nav>
   </footer>
 
-  <!-- Utterances 评论（config.yaml utterances.repo 留空则不渲染） -->
-  <Utterances />
+  <Comments />
 
   <!-- 桌面端目录 -->
   {

@@ -1,7 +1,7 @@
 ---
 import '@/styles/FriendsPage.css'
+import Comments from '@/components/Comments.astro'
 import Icon from '@/components/Icon.astro'
-import Utterances from '@/components/Utterances.astro'
 import { defaultLang, type Lang, useTranslations } from '@/i18n/ui'
 import type { FriendLink } from '@/lib/friends'
 import { mdiLinkVariant } from '@/lib/icons'
@@ -90,5 +90,5 @@ const cards = friends.map((f) => {
   }
 </div>
 
-<Utterances />
+<Comments />
 
