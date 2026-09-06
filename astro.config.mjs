@@ -84,7 +84,12 @@ export default defineConfig({
     sitemap(),
   ],
   vite: {
-    plugins: [tailwindcss(), ensurePostSlugs(), generateLqips(), updatePostUpdated({ enabled: siteConfig.autoUpdatePostUpdated })],
+    plugins: [
+      tailwindcss(),
+      ensurePostSlugs(),
+      generateLqips(),
+      updatePostUpdated({ enabled: siteConfig.autoUpdatePostUpdated }),
+    ],
     optimizeDeps: {
       include: ['photoswipe', 'photoswipe/lightbox', 'astro/virtual-modules/transitions-*.js'],
     },
