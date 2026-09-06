@@ -28,7 +28,6 @@
     "@tailwindcss/vite": "^4.3.3",
     "astro": "7.2.9",
     "dayjs": "^1.11.23",
-
     "katex": "^0.18.4",
     "lightningcss": "^1.33.0",
     "pagefind": "^1.5.2",
