@@ -201,7 +201,7 @@ const postYear = post.data.published.getUTCFullYear()
                       aria-current={p.id === post.id ? 'page' : undefined}
                       class={`flex items-center gap-3 rounded-[6px] px-2 py-1.5 text-[0.88rem] transition ${
                         p.id === post.id
-                          ? 'bg-accent/10 text-accent'
+                          ? 'border-l-2 border-accent bg-accent/10 text-ink dark:border-l-0 dark:text-accent'
                           : 'text-ink-2 hover:bg-surface-hover hover:text-accent'
                       }`}
                     >
