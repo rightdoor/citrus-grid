@@ -1,6 +1,5 @@
 ---
 import { render } from 'astro:content'
-import 'photoswipe/style.css'
 import '@/styles/PostPage.css'
 import Comments from '@/components/Comments.astro'
 import Icon from '@/components/Icon.astro'
@@ -575,6 +574,15 @@ const postYear = post.data.published.getUTCFullYear()
     tocCloseTimer = window.setTimeout(done, 160)
   }
 
+  async function loadPhotoswipeStyles() {
+    if (document.querySelector('style[data-photoswipe-css]')) return
+    const { default: css } = await import('photoswipe/style.css?inline')
+    const style = document.createElement('style')
+    style.dataset.photoswipeCss = '1'
+    style.textContent = css
+    document.head.appendChild(style)
+  }
+
   async function initPhotoswipe() {
     const container = document.querySelector('.post-content')
     if (!container || !container.querySelector('a.img-lightbox img')) return
@@ -610,6 +618,7 @@ const postYear = post.data.published.getUTCFullYear()
     const [{ default: PhotoSwipeLightbox }, { default: PhotoSwipe }] = await Promise.all([
       import('photoswipe/lightbox'),
       import('photoswipe'),
+      loadPhotoswipeStyles(),
     ])
     const lightbox = new PhotoSwipeLightbox({
       gallery: '.post-content',
