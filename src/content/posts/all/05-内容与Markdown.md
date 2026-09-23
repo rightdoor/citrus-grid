@@ -178,13 +178,31 @@ loader 的 `pattern: '**/*.md'` 会递归扫描。相对链接的解析也支持
 | 行内代码 / 代码块 | ✅ | `rehypeCodeBlock`（Prism） | 带语言图标、行号、复制按钮；19 个 Prism 语法组件 |
 | 水平线 | ✅ | 原生 | `---` / `***` / `___` |
 | 脚注 | ✅ | GFM + `remarkRehype` | id 前缀为 `post-`（不是默认的 `user-content-`） |
-| 数学公式 | ✅ | `remarkMath` + `rehypeKatex` | 行内 `$…$`、块级 `$$…$$` |
+| 数学公式 | ✅ | `remarkMath` + `rehypeKatex` | 行内 `$…$`、块级 `$$…$$`；KaTeX 的 CSS 按需加载（见下） |
 | Emoji 短代码 | ✅ | `remarkEmoji` | `:smile:` → 😄 |
 | 自动链接 | ✅ | GFM | `<https://…>`、`www.example.com` |
 | 内联 HTML | ✅ 页面 / ❌ RSS | 由 Astro 的 markdown 处理器保留 raw 节点 | 页面正常输出原生标签；RSS 会被 XML 转义，见下方警告 |
 | 提示容器 | ✅ | `remarkContainers`（自定义） | `:::info` / `tip` / `warning` / `danger` / `details` |
 | MDX / 组件嵌入 | ❌ | — | 见 `AboutPage` 的「未来计划」 |
 | 缩进式代码块（4 空格） | ❌ | — | 见下方说明 |
+
+> 数学公式的 CSS 按需加载
+>
+> `katex/dist/katex.min.css` 不再随文章页静态引入。`PostPage.astro` 在页面初始化时判断 `document.querySelector('.katex')`，只有正文真的渲染出公式才把 KaTeX 的 CSS 注入 `<head>`：
+>
+> ```ts
+> const { default: css } = await import('katex/dist/katex.min.css?inline')
+> const style = document.createElement('style')
+> style.dataset.katexCss = '1'   // 换页（Swup）后不重复注入
+> style.textContent = css
+> document.head.appendChild(style)
+> ```
+>
+> 这里用 `?inline` 取 CSS 文本而不是直接 `import '…css'`，是因为 `astro.config.mjs` 的 `build.inlineStylesheets: 'always'` 会把动态 import 出来的 CSS 资源一并内联进页面 HTML 并删掉资源文件——直接 import 会让公式页额外发出一个 404 的样式请求；取文本放进按需加载的 JS 分片里，才是真正的按需下载。
+>
+> 因此：无公式的文章页不会下载任何 KaTeX 资源；含公式的页面多下载一个 JS 分片 + woff2 字体（构建期由 `postbuild.js` 裁掉 ttf/woff，见 [06-构建与脚本.md#5](./06-构建与脚本.md#5-scriptspostbuildjs)）。
+>
+> 自查方式：DevTools → Network 过滤 `katex`；或 `performance.getEntriesByType('resource')` 里搜索 `katex`。
 
 > 内联 HTML 可用，但 RSS 里会被 XML 转义
 

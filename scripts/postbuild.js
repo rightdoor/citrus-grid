@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { transformSync } from 'esbuild'
 
@@ -93,6 +93,31 @@ function injectPreloads(html, stats) {
   return html.slice(0, headEnd) + tags + html.slice(headEnd)
 }
 
+const KATEX_LEGACY_FONT_RE = /^KaTeX_.*\.(ttf|woff)$/
+
+function trimKatexFonts() {
+  const astroDir = path.join(DIST_DIR, '_astro')
+  if (!statSync(astroDir, { throwIfNoEntry: false })) return
+
+  let count = 0
+  let savedBytes = 0
+  for (const entry of readdirSync(astroDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !KATEX_LEGACY_FONT_RE.test(entry.name)) continue
+    const full = path.join(astroDir, entry.name)
+    savedBytes += statSync(full).size
+    rmSync(full)
+    count++
+  }
+
+  if (count === 0) {
+    console.log('[postbuild] katex fonts: no ttf/woff to trim (already trimmed)')
+    return
+  }
+  console.log(
+    `[postbuild] trimmed ${count} KaTeX font files (ttf/woff, woff2 kept), saved ${(savedBytes / 1024).toFixed(1)} KiB`,
+  )
+}
+
 async function main() {
   if (!statSync(DIST_DIR, { throwIfNoEntry: false })) {
     console.error('[postbuild] dist/ not found, run astro build first')
@@ -100,7 +125,6 @@ async function main() {
     return
   }
 
-  // pagefind 只读 HTML 内容，与后处理互不影响，并行执行
   const pagefind = spawn('pagefind', ['--site', 'dist'], {
     stdio: 'inherit',
     shell: process.platform === 'win32',
@@ -116,6 +140,8 @@ async function main() {
 
   const htmlFiles = collectHtmlFiles(DIST_DIR)
   const stats = { scriptCount: 0, savedBytes: 0, injectedLinks: 0, touchedFiles: 0 }
+
+  trimKatexFonts()
 
   for (const file of htmlFiles) {
     const html = readFileSync(file, 'utf-8')

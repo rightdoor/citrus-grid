@@ -1,6 +1,5 @@
 ---
 import { render } from 'astro:content'
-import 'katex/dist/katex.min.css'
 import 'photoswipe/style.css'
 import '@/styles/PostPage.css'
 import Comments from '@/components/Comments.astro'
@@ -659,6 +658,16 @@ const postYear = post.data.published.getUTCFullYear()
       })
   }
 
+  async function loadKatexStyles() {
+    if (!document.querySelector('.katex')) return
+    if (document.querySelector('style[data-katex-css]')) return
+    const { default: css } = await import('katex/dist/katex.min.css?inline')
+    const style = document.createElement('style')
+    style.dataset.katexCss = '1'
+    style.textContent = css
+    document.head.appendChild(style)
+  }
+
   function scheduleIdle(fn: () => void) {
     const g = window as unknown as { requestIdleCallback?: (cb: () => void, opt: { timeout: number }) => void }
     if (g.requestIdleCallback) {
@@ -738,6 +747,7 @@ const postYear = post.data.published.getUTCFullYear()
   }
 
   function initPage() {
+    loadKatexStyles().catch(() => {})
     postBody = document.querySelector<HTMLElement>('.post-content')
     activeHeading = ''
     document.querySelectorAll('body > #toc-modal').forEach((el) => el.remove())
