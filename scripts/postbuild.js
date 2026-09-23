@@ -118,6 +118,50 @@ function trimKatexFonts() {
   )
 }
 
+const BUDGET_BYTES = 60 * 1024 * 1024
+
+function formatBytes(bytes) {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MiB`
+  return `${(bytes / 1024).toFixed(1)} KiB`
+}
+
+function collectFiles(dir, out = []) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) collectFiles(full, out)
+    else if (entry.isFile()) out.push({ file: full, size: statSync(full).size })
+  }
+  return out
+}
+
+function relativeName(file) {
+  return path.relative(DIST_DIR, file).replace(/\\/g, '/')
+}
+
+function reportBudget() {
+  const files = collectFiles(DIST_DIR)
+  const total = files.reduce((sum, f) => sum + f.size, 0)
+  const astroFiles = files.filter((f) => relativeName(f.file).startsWith('_astro/'))
+  const astroTotal = astroFiles.reduce((sum, f) => sum + f.size, 0)
+  const top = [...files].sort((a, b) => b.size - a.size).slice(0, 5)
+
+  console.log(
+    `[postbuild] dist total ${formatBytes(total)} (${files.length} files), ` +
+      `_astro ${formatBytes(astroTotal)} (${astroFiles.length} files)`,
+  )
+  console.log(
+    `[postbuild] top 5: ${top.map((f) => `${relativeName(f.file)} ${formatBytes(f.size)}`).join(' | ')}`,
+  )
+
+  if (total > BUDGET_BYTES) {
+    console.warn(
+      `[postbuild] budget exceeded: ${formatBytes(total)} > ${formatBytes(BUDGET_BYTES)} (audio included)`,
+    )
+    for (const f of top)
+      console.warn(`[postbuild]   ${relativeName(f.file)} ${formatBytes(f.size)}`)
+  }
+}
+
 async function main() {
   if (!statSync(DIST_DIR, { throwIfNoEntry: false })) {
     console.error('[postbuild] dist/ not found, run astro build first')
@@ -164,6 +208,8 @@ async function main() {
     console.error(`[postbuild] pagefind exited with code ${pagefindCode}`)
     process.exitCode = 1
   }
+
+  reportBudget()
 }
 
 main().catch((err) => {
