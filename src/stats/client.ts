@@ -266,5 +266,7 @@ async function refresh() {
 }
 
 onPageLoad(() => {
-  refresh().catch(() => {})
+  // 空闲期再刷新，避免与首屏渲染争主线程；统计缓存 TTL 与「切页先查缓存、过期才请求」的链路不变
+  const idle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 200))
+  idle(() => refresh().catch(() => {}), { timeout: 2000 })
 })
