@@ -1,7 +1,5 @@
 ---
 import '@/styles/music-player.css'
-import { readdirSync } from 'node:fs'
-import path from 'node:path'
 import Icon from '@/components/Icon.astro'
 import { defaultLang, type Lang, useTranslations } from '@/i18n/ui'
 import {
@@ -19,27 +17,11 @@ import {
   mdiVolumeHigh,
   mdiVolumeMute,
 } from '@/lib/icons'
-import { type MusicTrack, siteConfig } from '@/site.config'
+import { discoverPlaylist } from '@/lib/musicPlaylist'
+import { siteConfig } from '@/site.config'
 
 interface Props {
   lang?: Lang
-}
-
-const AUDIO_EXTS = new Set(['.flac', '.mp3', '.m4a', '.ogg', '.wav', '.opus', '.aac', '.webm'])
-
-function discoverPlaylist(): MusicTrack[] {
-  const dir = path.resolve(process.cwd(), 'public', 'music')
-  try {
-    return readdirSync(dir)
-      .filter((f) => AUDIO_EXTS.has(path.extname(f).toLowerCase()))
-      .sort((a, b) => a.localeCompare(b, 'zh'))
-      .map((f) => ({
-        title: path.basename(f, path.extname(f)),
-        src: `/music/${encodeURIComponent(f)}`,
-      }))
-  } catch {
-    return []
-  }
 }
 
 const { lang = defaultLang } = Astro.props
@@ -214,479 +196,142 @@ const ui = {
       </script>
 
       <script>
-        interface PlayerConfig {
-          playlist: { title: string; src: string; cover?: string }[]
-        }
         import { extractAudioCover } from '@/lib/audioCover'
+        import { clampRatio, createPlayer, formatTime, type PlayerTrack } from '@/lib/player'
+        import {
+          bindAudioEvents,
+          bindProgressDrag,
+          bindVolumeDrag,
+          createLayoutController,
+          createMediaPort,
+          createPanelController,
+          createPlayerViewFrom,
+          createScrollbarController,
+          queryPlayerElements,
+        } from '@/lib/musicUi'
 
-        const root = document.querySelector<HTMLElement>('[data-music-player]')!
-
-        const cfg = (window as any).__musicPlayerConfig as PlayerConfig
+        const cfg = (window as any).__musicPlayerConfig as { playlist: PlayerTrack[] }
         const uiText = (window as any).__musicPlayerUI as Record<string, string>
+        const tracks = cfg.playlist
 
-        const audio = root.querySelector<HTMLAudioElement>('[data-music-audio]')!
-        const fab = root.querySelector<HTMLButtonElement>('[data-music-open]')!
-        const panel = root.querySelector<HTMLElement>('[data-music-panel]')!
-        const panelList = root.querySelector<HTMLElement>('[data-music-panel-list]')!
-        const disc = root.querySelector<HTMLImageElement>('[data-music-disc]')!
-        const cover = root.querySelector<HTMLImageElement>('[data-music-cover]')!
-        const titleEl = root.querySelector<HTMLElement>('[data-music-title]')!
-        const indexEl = root.querySelector<HTMLElement>('[data-music-index]')!
-        const progress = root.querySelector<HTMLElement>('[data-music-progress]')!
-        const fill = root.querySelector<HTMLElement>('[data-music-fill]')!
-        const thumb = root.querySelector<HTMLElement>('[data-music-thumb]')!
-        const timeEl = root.querySelector<HTMLElement>('[data-music-current]')!
-        const durEl = root.querySelector<HTMLElement>('[data-music-duration]')!
-        const showListBtn = root.querySelector<HTMLButtonElement>('[data-music-showlist]')!
-        const closeListBtn = root.querySelector<HTMLButtonElement>('[data-music-closelist]')!
-        const shuffleBtn = root.querySelector<HTMLButtonElement>('[data-music-mode]')!
-        const muteBtn = root.querySelector<HTMLButtonElement>('[data-music-mute]')!
-        const volBar = root.querySelector<HTMLElement>('[data-music-volbar]')!
-        const volFill = root.querySelector<HTMLElement>('[data-music-volfill]')!
-        const volThumb = root.querySelector<HTMLElement>('[data-music-volthumb]')!
-        const listCountEl = root.querySelector<HTMLElement>('[data-music-listcount]')!
-        const listEl = root.querySelector<HTMLElement>('[data-music-list]')
-        const itemEls = listEl ? [...listEl.querySelectorAll<HTMLElement>('[data-music-item]')] : []
-        const scrollbar = root.querySelector<HTMLElement>('[data-music-scrollbar]')!
-        const scrollThumb = root.querySelector<HTMLElement>('[data-music-scrollthumb]')!
+        const els = queryPlayerElements()
+        if (els) {
+          const {
+            root,
+            audio,
+            fab,
+            panel,
+            panelList,
+            disc,
+            cover,
+            title: titleEl,
+            index: indexEl,
+            progress,
+            time: timeEl,
+            duration: durEl,
+            listCount: listCountEl,
+            list: listEl,
+            scrollbar: scrollbarEl,
+            scrollThumb,
+            prev: prevBtn,
+            play: playBtn,
+            stop: stopBtn,
+            next: nextBtn,
+          } = els
 
-        const prevBtn = root.querySelector<HTMLButtonElement>('[data-music-prev]')!
-        const playBtn = root.querySelector<HTMLButtonElement>('[data-music-play]')!
-        const stopBtn = root.querySelector<HTMLButtonElement>('[data-music-stop]')!
-        const nextBtn = root.querySelector<HTMLButtonElement>('[data-music-next]')!
-
-        const state = {
-          index: -1,
-          playing: false,
-          expanded: false,
-          listOpen: false,
-          playMode: 'order' as 'order' | 'loop' | 'shuffle',
-          volume: 0.5,
-          lastVolume: 0.5,
-          dragging: false,
-          hasCover: false,
-        }
-
-        function fmt(s: number): string {
-          if (!Number.isFinite(s) || s < 0) s = 0
-          const m = Math.floor(s / 60)
-          const sec = Math.floor(s % 60)
-          return `${m}:${sec.toString().padStart(2, '0')}`
-        }
-
-        function setFill(ratio: number) {
-          const pct = `${Math.min(1, Math.max(0, ratio)) * 100}%`
-          fill.style.width = pct
-          thumb.style.left = pct
-        }
-
-        function applyVolume(v: number) {
-          const clamped = Math.min(1, Math.max(0, v))
-          state.volume = clamped
-          audio.volume = clamped
-          if (clamped > 0) state.lastVolume = clamped
-          const pct = `${clamped * 100}%`
-          volFill.style.width = pct
-          volThumb.style.left = pct
-          root.classList.toggle('is-muted', clamped === 0)
-        }
-        function volFromClientX(clientX: number) {
-          const rect = volBar.getBoundingClientRect()
-          if (rect.width <= 0) return
-          applyVolume((clientX - rect.left) / rect.width)
-        }
-        muteBtn.addEventListener('click', () => {
-          if (state.volume === 0) {
-            applyVolume(state.lastVolume > 0 ? state.lastVolume : 0.5)
-          } else {
-            applyVolume(0)
-          }
-        })
-
-        function syncState() {
-          root.classList.toggle('is-playing', state.playing)
-          root.classList.toggle('has-track', state.index >= 0 && state.hasCover)
-          panel.classList.toggle('has-head', state.index >= 0)
-          playBtn.setAttribute('aria-label', state.playing ? uiText.pause : uiText.play)
-          playBtn.title = state.playing ? uiText.pause : uiText.play
-          itemEls.forEach((li, i) => li.classList.toggle('is-active', i === state.index))
-        }
-
-        function applyCover(src: string | undefined) {
-          state.hasCover = Boolean(src)
-          if (src) {
-            cover.src = src
-            cover.hidden = false
-            disc.src = src
-          } else {
-            cover.removeAttribute('src')
-            cover.hidden = true
-            disc.removeAttribute('src')
-          }
-          syncState()
-        }
-
-        function loadTrack(i: number, shouldPlay: boolean) {
-          const track = cfg.playlist[i]
-          if (!track) return
-          state.index = i
-          audio.src = track.src
-          audio.load()
-          titleEl.textContent = track.title
-          indexEl.textContent = `${i + 1}/${cfg.playlist.length}`
-          timeEl.textContent = '0:00'
-          durEl.textContent = '0:00'
-          setFill(0)
-          applyCover(track.cover)
-          const trackIndex = i
-          extractAudioCover(track.src).then((res) => {
-            if (state.index !== trackIndex || !res) return
-            applyCover(res.blobUrl)
+          const view = createPlayerViewFrom(els, uiText)
+          const scrollbar = createScrollbarController(listEl, scrollbarEl, scrollThumb)
+          const panelUi = createPanelController({
+            root,
+            fab,
+            panel,
+            panelList,
+            list: listEl,
+            scrollbar,
           })
-          if (shouldPlay) {
-            const p = audio.play()
-            if (p) p.catch(() => {})
-          } else {
-            state.playing = false
-            syncState()
-          }
-        }
+          const layout = createLayoutController(fab, panel, panelList)
 
-        function togglePlay() {
-          if (state.index < 0) {
-            if (cfg.playlist.length) loadTrack(0, true)
-            return
-          }
-          if (audio.paused) {
-            const p = audio.play()
-            if (p) p.catch(() => {})
-          } else {
-            audio.pause()
-          }
-        }
+          const player = createPlayer(tracks, createMediaPort(audio), {
+            onTrack(track, i) {
+              titleEl.textContent = track.title
+              indexEl.textContent = `${i + 1}/${tracks.length}`
+              timeEl.textContent = '0:00'
+              durEl.textContent = '0:00'
+              view.setFill(0)
+              view.applyCover(track.cover)
+              extractAudioCover(track.src).then((res) => {
+                if (player.state.index !== i || !res) return
+                player.setHasCover(true)
+                view.applyCover(res.blobUrl)
+              })
+            },
+            onState: view.onState,
+          })
 
-        function next() {
-          if (!cfg.playlist.length) return
-          const n = cfg.playlist.length
-          if (state.playMode === 'shuffle' && n > 1) {
-            let i = state.index < 0 ? Math.floor(Math.random() * n) : state.index
-            while (i === state.index) i = Math.floor(Math.random() * n)
-            loadTrack(i, true)
-            return
-          }
-          const i = state.index < 0 ? 0 : (state.index + 1) % n
-          loadTrack(i, true)
-        }
+          const isSeeking = bindProgressDrag(progress, (ratio) => {
+            if (player.state.index < 0 && tracks.length === 0) return
+            const seeked = player.seekToRatio(clampRatio(ratio))
+            view.setFill(ratio)
+            if (seeked !== null) timeEl.textContent = formatTime(seeked)
+          })
+          bindVolumeDrag(els.volBar, (ratio) => player.setVolume(ratio))
 
-        function prev() {
-          if (!cfg.playlist.length) return
-          if (state.index >= 0 && audio.currentTime > 3) {
-            audio.currentTime = 0
-            return
-          }
-          const n = cfg.playlist.length
-          const i = state.index <= 0 ? n - 1 : state.index - 1
-          loadTrack(i, true)
-        }
-
-        function stop() {
-          audio.pause()
-          audio.removeAttribute('src')
-          audio.load()
-          state.index = -1
-          state.playing = false
-          state.hasCover = false
-          state.playMode = 'order'
-          titleEl.textContent = ''
-          indexEl.textContent = ''
-          cover.removeAttribute('src')
-          cover.hidden = true
-          disc.removeAttribute('src')
-          timeEl.textContent = '0:00'
-          durEl.textContent = '0:00'
-          setFill(0)
-          syncState()
-          applyMode()
-        }
-
-        function seekFromClientX(clientX: number) {
-          const rect = progress.getBoundingClientRect()
-          let ratio = (clientX - rect.left) / rect.width
-          ratio = Math.min(1, Math.max(0, ratio))
-          if (state.index < 0) {
-            if (!cfg.playlist.length) return
-            loadTrack(0, false)
-          }
-          const dur = Number.isFinite(audio.duration) ? audio.duration : 0
-          if (dur > 0) {
-            audio.currentTime = dur * ratio
-            setFill(ratio)
-            timeEl.textContent = fmt(dur * ratio)
-          } else {
-            setFill(ratio)
-          }
-        }
-        progress.addEventListener('pointerdown', (e) => {
-          e.preventDefault()
-          state.dragging = true
-          ;(progress as HTMLDivElement).setPointerCapture(e.pointerId)
-          seekFromClientX(e.clientX)
-        })
-        progress.addEventListener('pointermove', (e) => {
-          if (state.dragging) seekFromClientX(e.clientX)
-        })
-        const endDrag = () => {
-          state.dragging = false
-        }
-        progress.addEventListener('pointerup', endDrag)
-        progress.addEventListener('pointercancel', endDrag)
-
-        audio.addEventListener('play', () => {
-          state.playing = true
-          syncState()
-        })
-        audio.addEventListener('pause', () => {
-          state.playing = false
-          syncState()
-        })
-        audio.addEventListener('loadedmetadata', () => {
-          durEl.textContent = fmt(audio.duration)
-        })
-        audio.addEventListener('timeupdate', () => {
-          if (state.dragging) return
-          if (Number.isFinite(audio.duration) && audio.duration > 0) {
-            setFill(audio.currentTime / audio.duration)
-          }
-          timeEl.textContent = fmt(audio.currentTime)
-        })
-        audio.addEventListener('ended', () => {
-          if (state.playMode === 'loop') {
-            loadTrack(state.index, true)
-          } else {
-            next()
-          }
-        })
-        audio.addEventListener('error', () => {
-          if (state.playing) {
-            state.playing = false
-            syncState()
-          }
-        })
-
-        disc.addEventListener('error', () => {
-          if (!state.hasCover) return
-          state.hasCover = false
-          applyCover(undefined)
-        })
-        cover.addEventListener('error', () => {
-          cover.hidden = true
-          cover.removeAttribute('src')
-        })
-
-        const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        let panelClosingTimer = 0
-        function applyPanelClosed() {
-          panel.hidden = true
-          panel.classList.remove('music-panel-in', 'music-panel-out')
-        }
-        function setExpanded(open: boolean) {
-          state.expanded = open
-          fab.setAttribute('aria-expanded', open ? 'true' : 'false')
-          root.classList.toggle('is-open', open)
-          if (open) {
-            window.clearTimeout(panelClosingTimer)
-            panel.classList.remove('music-panel-out')
-            panel.hidden = false
-            if (reduceMotion()) {
-              panel.classList.add('music-panel-in')
-            } else {
-              void panel.offsetWidth
-              panel.classList.add('music-panel-in')
-            }
-          } else {
-            setListOpen(false)
-            if (reduceMotion() || !panel.classList.contains('music-panel-in')) {
-              applyPanelClosed()
-              return
-            }
-            panel.classList.remove('music-panel-in')
-            panel.classList.add('music-panel-out')
-            const finalize = () => {
-              if (!panel.classList.contains('music-panel-out')) return
-              window.clearTimeout(panelClosingTimer)
-              applyPanelClosed()
-            }
-            panel.addEventListener(
-              'transitionend',
-              (e) => {
-                if (e.target === panel && e.propertyName === 'transform') finalize()
+          bindAudioEvents(
+            audio,
+            player,
+            {
+              setFill: view.setFill,
+              setTimeText: (t) => {
+                timeEl.textContent = t
               },
-              { once: true },
-            )
-            panelClosingTimer = window.setTimeout(finalize, 400)
-          }
-        }
-        function setListOpen(open: boolean) {
-          state.listOpen = open
-          panelList.hidden = !open
-          if (open) {
-            positionListScrollbar()
-            scrollActiveIntoView()
-          }
-        }
-        function closeTopmost(): boolean {
-          if (state.listOpen) {
-            setListOpen(false)
-            return true
-          }
-          if (state.expanded) {
-            setExpanded(false)
-            return true
-          }
-          return false
-        }
-        fab.addEventListener('click', () => setExpanded(!state.expanded))
-        showListBtn.addEventListener('click', () => setListOpen(true))
-        closeListBtn.addEventListener('click', () => closeTopmost())
-        document.addEventListener('pointerdown', (e) => {
-          if (state.expanded && !root.contains(e.target as Node)) setExpanded(false)
-        })
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') closeTopmost()
-        })
+              setDurationText: (t) => {
+                durEl.textContent = t
+              },
+            },
+            isSeeking,
+          )
 
-        const modeLabels: Record<'order' | 'loop' | 'shuffle', string> = {
-          order: uiText.order,
-          loop: uiText.loop,
-          shuffle: uiText.shuffle,
-        }
-        function applyMode() {
-          root.classList.remove('mode-order', 'mode-loop', 'mode-shuffle')
-          root.classList.add(`mode-${state.playMode}`)
-          const label = modeLabels[state.playMode]
-          shuffleBtn.title = label
-          shuffleBtn.setAttribute('aria-label', label)
-        }
-        shuffleBtn.addEventListener('click', () => {
-          state.playMode =
-            state.playMode === 'order' ? 'loop' : state.playMode === 'loop' ? 'shuffle' : 'order'
-          applyMode()
-        })
-        applyMode()
-
-        const volDrag = { active: false }
-        volBar.addEventListener('pointerdown', (e) => {
-          e.preventDefault()
-          volDrag.active = true
-          ;(volBar as HTMLDivElement).setPointerCapture(e.pointerId)
-          volFromClientX(e.clientX)
-        })
-        volBar.addEventListener('pointermove', (e) => {
-          if (volDrag.active) volFromClientX(e.clientX)
-        })
-        const endVolDrag = () => {
-          volDrag.active = false
-        }
-        volBar.addEventListener('pointerup', endVolDrag)
-        volBar.addEventListener('pointercancel', endVolDrag)
-        applyVolume(state.volume)
-
-        if (listEl) {
-          listEl.addEventListener('click', (e) => {
-            const li = (e.target as HTMLElement).closest<HTMLElement>('[data-music-item]')
-            if (!li || !li.dataset.musicItem) return
-            loadTrack(Number(li.dataset.musicItem), true)
+          disc.addEventListener('error', () => {
+            if (!player.state.hasCover) return
+            player.setHasCover(false)
+            view.applyCover(undefined)
           })
-        }
-        if (cfg.playlist.length > 0) {
-          listCountEl.textContent = String(cfg.playlist.length)
-        }
-        playBtn.addEventListener('click', togglePlay)
-        prevBtn.addEventListener('click', prev)
-        nextBtn.addEventListener('click', next)
-        stopBtn.addEventListener('click', stop)
-
-        function syncScrollbar() {
-          if (!listEl) return
-          const overflow = listEl.scrollHeight - listEl.clientHeight >= 4
-          if (!overflow) {
-            scrollbar.style.display = 'none'
-            scrollThumb.style.top = '0px'
-            return
-          }
-          scrollbar.style.display = 'block'
-          requestAnimationFrame(() => {
-            const trackH = scrollbar.clientHeight || 1
-            const scrollH = listEl.scrollHeight - listEl.clientHeight
-            const thumbH = Math.max(Math.round((listEl.clientHeight / listEl.scrollHeight) * trackH), 24)
-            scrollThumb.style.height = `${thumbH}px`
-            const maxTop = trackH - thumbH
-            scrollThumb.style.top = `${maxTop * (listEl.scrollTop / scrollH)}px`
+          cover.addEventListener('error', () => {
+            cover.hidden = true
+            cover.removeAttribute('src')
           })
-        }
-        function positionListScrollbar() {
-          requestAnimationFrame(syncScrollbar)
-        }
-        function scrollActiveIntoView() {
-          if (!listEl) return
-          const active = listEl.querySelector<HTMLElement>('li.is-active')
-          if (active) listEl.scrollTop = Math.max(0, active.offsetTop - listEl.clientHeight / 2)
-        }
-        listEl?.addEventListener('scroll', syncScrollbar)
-        window.addEventListener('resize', syncScrollbar)
 
-        const thumbDrag = { active: false, startY: 0, startScrollTop: 0 }
-        scrollThumb.addEventListener('pointerdown', (e) => {
-          e.preventDefault()
-          thumbDrag.active = true
-          thumbDrag.startY = e.clientY
-          thumbDrag.startScrollTop = listEl?.scrollTop ?? 0
-          scrollThumb.setPointerCapture(e.pointerId)
-        })
-        scrollThumb.addEventListener('pointermove', (e) => {
-          if (!thumbDrag.active || !listEl) return
-          const trackH = scrollbar.clientHeight || 1
-          const thumbH = scrollThumb.offsetHeight
-          const maxTop = trackH - thumbH
-          const scrollH = listEl.scrollHeight - listEl.clientHeight
-          if (maxTop <= 0 || scrollH <= 0) return
-          const delta = e.clientY - thumbDrag.startY
-          listEl.scrollTop = thumbDrag.startScrollTop + (delta / maxTop) * scrollH
-        })
-        const endThumbDrag = () => {
-          thumbDrag.active = false
-        }
-        scrollThumb.addEventListener('pointerup', endThumbDrag)
-        scrollThumb.addEventListener('pointercancel', endThumbDrag)
-
-        function reposition() {
-          const nav = document.querySelector<HTMLElement>('.scroll-control-nav')
-          const isMobile = window.matchMedia('(max-width: 768px)').matches
-          const rightGap = isMobile ? 12 : 20
-          const bottomSlot = isMobile ? 64 : 32
-
-          fab.style.right = `${rightGap}px`
-          fab.style.bottom = `${bottomSlot}px`
-
-          const fabSize = fab.getBoundingClientRect().height || 40
-          if (nav) {
-            nav.style.right = `${rightGap}px`
-            nav.style.bottom = `${bottomSlot + fabSize + 8}px`
+          if (listEl) {
+            listEl.addEventListener('click', (e) => {
+              const li = (e.target as HTMLElement).closest<HTMLElement>('[data-music-item]')
+              if (!li || !li.dataset.musicItem) return
+              player.load(Number(li.dataset.musicItem), true)
+            })
           }
+          if (tracks.length > 0) listCountEl.textContent = String(tracks.length)
+          playBtn.addEventListener('click', () => player.togglePlay())
+          prevBtn.addEventListener('click', () => player.prev())
+          nextBtn.addEventListener('click', () => player.next())
+          stopBtn.addEventListener('click', () => player.stop())
+          els.mute.addEventListener('click', () => player.toggleMute())
+          els.mode.addEventListener('click', () => player.cycleMode())
 
-          const fabWidth = fab.getBoundingClientRect().width || 40
-          const panelRight = rightGap + fabWidth + 10
-          const limit = `calc(100vw - ${panelRight + 8}px)`
-          ;[panel, panelList].forEach((el) => {
-            el.style.right = `${panelRight}px`
-            el.style.bottom = `${bottomSlot}px`
-            el.style.maxWidth = limit
+          fab.addEventListener('click', () => panelUi.setExpanded(!panelUi.isExpanded()))
+          els.showList.addEventListener('click', () => panelUi.setListOpen(true))
+          els.closeList.addEventListener('click', () => panelUi.closeTopmost())
+          document.addEventListener('pointerdown', (e) => {
+            if (panelUi.isExpanded() && !root.contains(e.target as Node)) panelUi.setExpanded(false)
           })
-          syncScrollbar()
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') panelUi.closeTopmost()
+          })
+
+          scrollbar.bindThumbDrag()
+          layout.reposition()
+          document.addEventListener('astro:page-load', layout.reposition)
+          window.addEventListener('resize', layout.reposition)
+          player.setVolume(player.state.volume)
         }
-        reposition()
-        document.addEventListener('astro:page-load', reposition)
-        window.addEventListener('resize', reposition)
       </script>
     </section>
   )
