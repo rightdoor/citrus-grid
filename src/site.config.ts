@@ -1,3 +1,5 @@
+import { validateSiteConfig } from '@/lib/siteConfigGuard'
+
 export interface SocialLink {
   platform: string
   url: string
@@ -106,3 +108,6 @@ export const siteConfig = {
     playlist: [] as MusicTrack[],
   },
 }
+
+// 配置兜底校验：实现见 lib/siteConfigGuard.ts，此处只调用（校验只做告警 / 报错）
+validateSiteConfig(siteConfig)

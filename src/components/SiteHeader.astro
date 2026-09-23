@@ -29,9 +29,11 @@ const NAV_DEFS: Record<string, { key: string; icon: string }> = {
   '/about': { key: 'nav.about', icon: mdiAccountOutline },
 }
 
+const navConfig = siteConfig.nav ?? []
+
 const navItems = [
   { path: '/', label: t('nav.home'), icon: mdiHomeOutline },
-  ...[...new Set(siteConfig.nav)]
+  ...[...new Set(Array.isArray(navConfig) ? navConfig : [])]
     .filter((path) => path !== '/' && path in NAV_DEFS)
     .map((path) => ({ path, label: t(NAV_DEFS[path].key), icon: NAV_DEFS[path].icon })),
 ]
