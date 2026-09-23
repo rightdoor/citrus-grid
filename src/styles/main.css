@@ -160,14 +160,16 @@ body {
   }
 }
 
-a {
-  color: var(--wp-link);
-  text-decoration: none;
-  transition: color 0.2s;
-}
+@layer base {
+  a {
+    color: var(--wp-link);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
 
-a:hover {
-  color: var(--wp-link-hover);
+  a:hover {
+    color: var(--wp-link-hover);
+  }
 }
 
 /* 隐藏所有竖直滚动条，横向保留细滚动条 */
