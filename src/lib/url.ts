@@ -31,5 +31,9 @@ export function isAssetUrl(path: string): boolean {
 
 export function shouldIgnoreSwup(url: string): boolean {
   if (url.includes('#')) return true
-  return isAssetUrl(new URL(url, 'https://example.com').pathname)
+  const path = new URL(url, 'https://example.com').pathname
+  return (
+    /\.(xml|txt|json|pdf|zip|png|jpe?g|webp|gif|svg|ico|avif|woff2?|ttf|eot)$/i.test(path) ||
+    /^\/(pagefind|fonts|images)\//.test(path)
+  )
 }
