@@ -132,17 +132,19 @@ function isActive(path: string): boolean {
   })
 
   function fitNavLabels() {
-    const MAX_LABEL_WIDTH = 56
-    const labels = [...document.querySelectorAll<HTMLElement>('header .nav-label')]
+    const MIN_FONT_SIZE = 10
+    const labels = [...document.querySelectorAll<HTMLElement>('header nav .nav-label')]
     for (const el of labels) {
       el.style.fontSize = ''
       el.closest('.nav-item')?.classList.remove('nav-compact')
     }
     if (labels.length === 0) return
+    const navWindow = parseFloat(getComputedStyle(labels[0]).getPropertyValue('--nav-window'))
+    const MAX_LABEL_WIDTH = (Number.isFinite(navWindow) ? navWindow : 60) - 4
     const base = parseFloat(getComputedStyle(labels[0]).fontSize)
     const maxWidth = Math.max(...labels.map((el) => el.getBoundingClientRect().width))
     if (maxWidth > MAX_LABEL_WIDTH) {
-      const size = `${Math.max(10, (base * MAX_LABEL_WIDTH) / maxWidth)}px`
+      const size = `${Math.max(MIN_FONT_SIZE, (base * MAX_LABEL_WIDTH) / maxWidth)}px`
       for (const el of labels) {
         el.style.fontSize = size
         el.closest('.nav-item')?.classList.add('nav-compact')
@@ -156,14 +158,15 @@ function isActive(path: string): boolean {
 <style>
   .nav-item {
     --nav-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --nav-window: 60px;
   }
 
   .nav-clip {
     position: absolute;
     top: 0;
     left: 50%;
-    width: 60px;
-    height: 60px;
+    width: var(--nav-window);
+    height: var(--nav-window);
     overflow: hidden;
     transform: translateX(-50%);
   }
@@ -185,7 +188,7 @@ function isActive(path: string): boolean {
   }
 
   .nav-item.nav-compact .nav-content {
-    width: 60px;
+    width: var(--nav-window);
     padding: 0;
   }
 
