@@ -10,6 +10,7 @@
     "check": "astro check",
     "type-check": "tsc --noEmit",
     "new-post": "node scripts/new-post.js",
+    "check-i18n": "node scripts/check-i18n.js",
     "format-post-meta": "node scripts/format-post-meta.js",
     "format": "biome format --write ./src",
     "format:all": "biome check --write ./src ./scripts ./astro.config.mjs ./biome.json ./package.json ./tsconfig.json",

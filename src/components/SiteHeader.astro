@@ -1,6 +1,6 @@
 ---
 import Icon from '@/components/Icon.astro'
-import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
+import { defaultLang, type Lang, localePath, type MessageKey, useTranslations } from '@/i18n/ui'
 import {
   mdiAccountGroupOutline,
   mdiAccountOutline,
@@ -20,7 +20,7 @@ interface Props {
 const { lang = defaultLang } = Astro.props
 const t = useTranslations(lang)
 
-const NAV_DEFS: Record<string, { key: string; icon: string }> = {
+const NAV_DEFS: Record<string, { key: MessageKey; icon: string }> = {
   '/archive': { key: 'nav.archive', icon: mdiArchiveOutline },
   '/categories': { key: 'nav.categories', icon: mdiFolderOutline },
   '/tags': { key: 'nav.tags', icon: mdiTagOutline },
