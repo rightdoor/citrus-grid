@@ -1,22 +1,41 @@
 ---
 import Icon from '@/components/Icon.astro'
 import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
-import { mdiCloseCircle, mdiMagnify, mdiTagOutline } from '@/lib/icons'
+import { mdiCloseCircle, mdiFolderOutline, mdiMagnify, mdiTagOutline } from '@/lib/icons'
 import type { NameCount } from '@/lib/posts'
+
+type TaxonomyKind = 'categories' | 'tags'
 
 interface Props {
   lang?: Lang
-  tags: NameCount[]
+  kind: TaxonomyKind
+  items: NameCount[]
 }
 
-const { lang = defaultLang, tags } = Astro.props
+const { lang = defaultLang, kind, items } = Astro.props
 const t = useTranslations(lang)
+const isCategory = kind === 'categories'
+
+const rootId = isCategory ? 'categories' : 'tags'
+const searchId = isCategory ? 'category-search' : 'tag-search'
+const clearId = isCategory ? 'category-clear' : 'tag-clear'
+const emptyId = isCategory ? 'categories-empty' : 'tags-empty'
+const totalId = isCategory ? 'categories-total' : 'tags-total'
+const totalClass = isCategory
+  ? 'mt-6 text-center text-sm text-ink-3'
+  : 'mt-8 text-center text-sm text-ink-3'
+const detailPath = (name: string) =>
+  localePath(lang, `${isCategory ? '/categories/' : '/tags/'}${encodeURIComponent(name)}`)
 ---
 
-<div class="mx-auto max-w-[800px] mt-8" id="tags">
+<div class="mx-auto max-w-[800px] mt-8" id={rootId}>
   <header class="mb-8 text-center">
-    <h1 class="font-serif text-[1.75rem] font-bold text-ink">{t('tags.title')}</h1>
-    <p class="mt-1 text-sm text-ink-3">{t('tags.subtitle')}</p>
+    <h1 class="font-serif text-[1.75rem] font-bold text-ink">
+      {isCategory ? t('categories.title') : t('tags.title')}
+    </h1>
+    <p class="mt-1 text-sm text-ink-3">
+      {isCategory ? t('categories.subtitle') : t('tags.subtitle')}
+    </p>
   </header>
 
   <div class="mb-6 flex items-center gap-3">
@@ -24,12 +43,12 @@ const t = useTranslations(lang)
       <Icon d={mdiMagnify} class="text-ink-3" />
       <input
         type="text"
-        id="tag-search"
-        placeholder={t('tags.searchPlaceholder')}
+        id={searchId}
+        placeholder={isCategory ? t('categories.searchPlaceholder') : t('tags.searchPlaceholder')}
         class="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-3"
       />
       <button
-        id="tag-clear"
+        id={clearId}
         type="button"
         class="hidden cursor-pointer text-ink-3 transition hover:text-ink"
         aria-label={t('misc.clear')}
@@ -59,13 +78,34 @@ const t = useTranslations(lang)
   </div>
 
   {
-    tags.length === 0 ? (
+    isCategory ? (
+      items.length === 0 ? (
+        <div class="mt-16 text-center text-[0.95rem] text-ink-3">{t('categories.empty')}</div>
+      ) : (
+        <div class="flex flex-col" id="category-list">
+          {items.map((c) => (
+            <a
+              href={detailPath(c.name)}
+              class="category-row group flex cursor-pointer items-center justify-between rounded-[6px] px-2 py-3 text-ink! transition hover:bg-surface-hover"
+              data-name={c.name}
+              data-count={c.count}
+            >
+              <span class="inline-flex items-center gap-2 text-base transition group-hover:text-accent">
+                <Icon d={mdiFolderOutline} class="text-lg text-ink-3" />
+                {c.name}
+              </span>
+              <span class="rounded-[3px] bg-paper px-2 py-0.5 text-xs text-ink-3">{c.count}</span>
+            </a>
+          ))}
+        </div>
+      )
+    ) : items.length === 0 ? (
       <div class="mt-16 text-center text-[0.95rem] text-ink-3">{t('tags.empty')}</div>
     ) : (
       <div class="mt-4 flex flex-wrap justify-center gap-2.5" id="tag-list">
-        {tags.map((item) => (
+        {items.map((item) => (
           <a
-            href={localePath(lang, `/tags/${encodeURIComponent(item.name)}`)}
+            href={detailPath(item.name)}
             class="tag-row inline-flex items-center gap-1.5 rounded-[8px] border border-line-light bg-surface px-3 py-1.5 text-[0.9rem] text-ink! shadow-card transition hover:-translate-y-px hover:border-accent hover:text-accent! hover:shadow-card-hover"
             data-name={item.name}
             data-count={item.count}
@@ -81,33 +121,44 @@ const t = useTranslations(lang)
     )
   }
 
-  <div id="tags-empty" class="mt-16 hidden text-center text-[0.95rem] text-ink-3">{t('tags.empty')}</div>
+  <div id={emptyId} class="mt-16 hidden text-center text-[0.95rem] text-ink-3">
+    {isCategory ? t('categories.empty') : t('tags.empty')}
+  </div>
 
   {
-    tags.length > 0 && (
-      <div id="tags-total" class="mt-8 text-center text-sm text-ink-3" data-template={t('tags.total')}>
-        {t('tags.total', { n: tags.length })}
+    items.length > 0 && (
+      <div
+        id={totalId}
+        class={totalClass}
+        data-template={isCategory ? t('categories.total') : t('tags.total')}
+      >
+        {isCategory ? t('categories.total', { n: items.length }) : t('tags.total', { n: items.length })}
       </div>
     )
   }
 </div>
 
 <script>
-  import { tagsSort } from '@/stores/ui'
   import { onPageLoad } from '@/lib/pageLifecycle'
+  import { categoriesSort, tagsSort } from '@/stores/ui'
 
-  function initTagsPage() {
-    const root = document.getElementById('tags')
+  function initTaxonomyPage() {
+    const root = document.querySelector<HTMLElement>('#categories, #tags')
     if (!root) return
-    const searchInput = root.querySelector<HTMLInputElement>('#tag-search')
-    const clearBtn = root.querySelector<HTMLButtonElement>('#tag-clear')
-    const list = root.querySelector<HTMLElement>('#tag-list')
-    const rows = Array.from(list?.querySelectorAll<HTMLElement>('.tag-row') ?? [])
-    const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('.sort-btn'))
-    const emptyEl = root.querySelector<HTMLElement>('#tags-empty')
-    const totalEl = root.querySelector<HTMLElement>('#tags-total')
+    const isCategory = root.id === 'categories'
+    const prefix = isCategory ? 'category' : 'tag'
+    const plural = isCategory ? 'categories' : 'tags'
+    const sortStore = isCategory ? categoriesSort : tagsSort
 
-    let sortBy: 'name' | 'count' = tagsSort.get()
+    const searchInput = root.querySelector<HTMLInputElement>(`#${prefix}-search`)
+    const clearBtn = root.querySelector<HTMLButtonElement>(`#${prefix}-clear`)
+    const list = root.querySelector<HTMLElement>(`#${prefix}-list`)
+    const rows = Array.from(list?.querySelectorAll<HTMLElement>(`.${prefix}-row`) ?? [])
+    const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('.sort-btn'))
+    const emptyEl = root.querySelector<HTMLElement>(`#${plural}-empty`)
+    const totalEl = root.querySelector<HTMLElement>(`#${plural}-total`)
+
+    let sortBy: 'name' | 'count' = sortStore.get()
 
     function render() {
       if (!list) return
@@ -126,7 +177,9 @@ const t = useTranslations(lang)
       }
       clearBtn?.classList.toggle('hidden', !q)
       if (emptyEl) emptyEl.classList.toggle('hidden', filtered.length > 0)
-      if (totalEl) totalEl.textContent = (totalEl.dataset.template || '').replace('{n}', String(filtered.length))
+      if (totalEl) {
+        totalEl.textContent = (totalEl.dataset.template || '').replace('{n}', String(filtered.length))
+      }
       for (const btn of sortBtns) {
         const active = btn.dataset.sort === sortBy
         btn.classList.toggle('bg-accent', active)
@@ -148,11 +201,11 @@ const t = useTranslations(lang)
     for (const btn of sortBtns) {
       btn.addEventListener('click', () => {
         sortBy = (btn.dataset.sort as 'name' | 'count') || 'count'
-        tagsSort.set(sortBy)
+        sortStore.set(sortBy)
         render()
       })
     }
     render()
   }
-  onPageLoad(initTagsPage)
+  onPageLoad(initTaxonomyPage)
 </script>

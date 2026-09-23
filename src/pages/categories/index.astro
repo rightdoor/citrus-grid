@@ -1,5 +1,5 @@
 ---
-import CategoriesPage from '@/components/pages/CategoriesPage.astro'
+import TaxonomyPage from '@/components/pages/TaxonomyPage.astro'
 import { defaultLang, useTranslations } from '@/i18n/ui'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { getPublishedPosts, groupByCategory } from '@/lib/posts'
@@ -11,5 +11,5 @@ const categories = groupByCategory(posts)
 ---
 
 <BaseLayout lang={lang} title={t('categories.title')}>
-  <CategoriesPage lang={lang} categories={categories} />
+  <TaxonomyPage lang={lang} kind="categories" items={categories} />
 </BaseLayout>

@@ -1,5 +1,5 @@
 ---
-import TagsPage from '@/components/pages/TagsPage.astro'
+import TaxonomyPage from '@/components/pages/TaxonomyPage.astro'
 import { defaultLang, useTranslations } from '@/i18n/ui'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { getPublishedPosts, groupByTags } from '@/lib/posts'
@@ -11,5 +11,5 @@ const tags = groupByTags(posts)
 ---
 
 <BaseLayout lang={lang} title={t('tags.title')}>
-  <TagsPage lang={lang} tags={tags} />
+  <TaxonomyPage lang={lang} kind="tags" items={tags} />
 </BaseLayout>
