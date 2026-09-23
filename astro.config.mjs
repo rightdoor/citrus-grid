@@ -21,6 +21,7 @@ import { rehypeImages } from './src/lib/md/rehypeImages.ts'
 import { rehypeRelativeLinks } from './src/lib/md/rehypeRelativeLinks.ts'
 import { rehypeTableWrap } from './src/lib/md/rehypeTableWrap.ts'
 import { remarkContainers } from './src/lib/md/remarkContainers.ts'
+import { shouldIgnoreSwup } from './src/lib/url.ts'
 import { siteConfig } from './src/site.config.ts'
 
 const site = siteConfig.url
@@ -78,14 +79,7 @@ export default defineConfig({
       updateHead: true,
       updateBodyClass: false,
       globalInstance: true,
-      ignore: (url) => {
-        if (url.includes('#')) return true
-        const path = new URL(url, 'https://example.com').pathname
-        if (/\.(xml|txt|json|pdf|zip|png|jpe?g|webp|gif|svg|ico|avif|woff2?|ttf|eot)$/i.test(path))
-          return true
-        if (/^\/(pagefind|fonts|images)\//.test(path)) return true
-        return false
-      },
+      ignore: shouldIgnoreSwup,
     }),
     sitemap(),
   ],
