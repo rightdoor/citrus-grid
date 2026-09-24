@@ -1,0 +1,76 @@
+.pet {
+  --pet-gap: 28px;
+  --pet-viewport-gap: 16px;
+  --pet-anchor-x: 0px;
+  --pet-bottom: 32px;
+  --pet-unit: clamp(
+    11.2px,
+    min(1.9444vw, 3.8889vh, calc((var(--pet-anchor-x) - var(--pet-gap)) / 8)),
+    28px
+  );
+  --pet-size: calc(var(--pet-unit) * 8);
+  --pet-ink: var(--wp-accent);
+  --pet-glow: color-mix(in srgb, var(--wp-accent) 35%, transparent);
+  position: fixed;
+  left: max(
+    calc(var(--pet-viewport-gap) + env(safe-area-inset-left, 0px)),
+    calc(var(--pet-anchor-x) - var(--pet-size) - var(--pet-gap))
+  );
+  bottom: max(var(--pet-bottom), env(safe-area-inset-bottom, 0px));
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--pet-size);
+  height: var(--pet-size);
+  background-color: transparent;
+  box-shadow: 0 0 calc(var(--pet-unit) * 0.7) var(--pet-glow);
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--pet-unit) solid var(--pet-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pet-slide {
+  position: relative;
+  z-index: 1;
+  will-change: transform;
+}
+
+.pet-eyes {
+  position: relative;
+  display: flex;
+  gap: var(--pet-unit);
+  will-change: transform;
+}
+
+.pet-eye {
+  width: var(--pet-unit);
+  height: calc(var(--pet-unit) * 2.5);
+  background: var(--pet-ink);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@media (max-width: 768px) {
+  .pet {
+    --pet-bottom: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-slide,
+  .pet-eyes,
+  .pet-eye {
+    will-change: auto;
+  }
+}

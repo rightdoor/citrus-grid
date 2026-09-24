@@ -1,4 +1,5 @@
 import { onPageLoad } from '@/lib/pageLifecycle'
+import { syncPet } from './pet'
 
 interface SwupVisit {
   to: { url: string }
@@ -65,6 +66,18 @@ export function bindSwapHooks() {
     syncNavState()
   })
   onPageLoad(() => syncNavState())
+}
+
+export function bindPetToSwup(attempt = 0) {
+  const swup = swupWindow().swup
+  if (swup?.hooks) {
+    swup.hooks.on('content:replace', syncPet)
+    swup.hooks.on('page:view', syncPet)
+    return
+  }
+  if (attempt < 100) {
+    window.setTimeout(() => bindPetToSwup(attempt + 1), 100)
+  }
 }
 
 const HEADING_SCROLL_OFFSET = 80

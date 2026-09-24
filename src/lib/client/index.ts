@@ -1,7 +1,13 @@
 import { initGridTrail } from './gridTrail'
 import { bindControlClicks, bindScrollControls, bindTocFab, initPageFlags } from './pageBindings'
+import { initPet } from './pet'
 import { bindProfileCardAnim } from './profileCardAnim'
-import { bindCrossPageAnchors, bindNavStartSync, bindSwapHooks } from './swupBindings'
+import {
+  bindCrossPageAnchors,
+  bindNavStartSync,
+  bindPetToSwup,
+  bindSwapHooks,
+} from './swupBindings'
 
 document.addEventListener('DOMContentLoaded', () => {
   document.dispatchEvent(new Event('astro:page-load'))
@@ -13,6 +19,8 @@ bindScrollControls()
 bindNavStartSync()
 bindProfileCardAnim()
 initGridTrail()
+initPet()
+bindPetToSwup()
 bindSwapHooks()
 bindCrossPageAnchors()
 bindControlClicks()

@@ -1,6 +1,7 @@
 ---
 import '@/styles/main.css'
 import MusicPlayer from '@/components/MusicPlayer.astro'
+import Pet from '@/components/Pet.astro'
 import ProfileCard from '@/components/ProfileCard.astro'
 import ScrollControls from '@/components/ScrollControls.astro'
 import SearchModal from '@/components/SearchModal.astro'
@@ -134,6 +135,7 @@ const jsonLd =
       <SearchModal lang={lang} />
       <ScrollControls lang={lang} showTocButton={showTocButton} />
       <MusicPlayer lang={lang} />
+      <Pet />
     </div>
 
     {siteConfig.statsScript && import.meta.env.PROD && (

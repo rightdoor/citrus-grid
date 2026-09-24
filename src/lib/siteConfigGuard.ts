@@ -1,28 +1,19 @@
-// 站点配置兜底校验：只做告警 / 报错，绝不改写传入的配置对象。
-// 校验逻辑独立于 site.config.ts，配置文件里只保留 import + 调用。
-
 const SUPPORTED_LANGS = ['zh', 'ja', 'en'] as const
 
-// 播放列表条目的必需字段
 const REQUIRED_TRACK_FIELDS = ['title', 'src'] as const
 
-// 宽松的结构化入参：字段被临时删除 / 写错类型时仍能通过编译
 export interface ValidatableSiteConfig {
   nav?: unknown
   defaultLang?: unknown
   musicPlayer?: { enabled?: unknown; playlist?: unknown } | null
+  pet?: { enabled?: unknown } | null
 }
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string')
 }
 
-/**
- * 站点配置兜底校验（纯告警 / 报错，不修改配置）。
- * Site config guard: warn / throw only, never mutate the config object.
- */
 export function validateSiteConfig(config: ValidatableSiteConfig): void {
-  // nav：缺失或非字符串数组都视为无效配置（消费方回退为空数组，顶栏仅剩「首页」）
   if (!isStringArray(config.nav)) {
     // 中文：`nav` 必须是字符串数组，当前取值已被忽略，顶栏将回退为仅「首页」一项。
     console.warn(
@@ -30,7 +21,6 @@ export function validateSiteConfig(config: ValidatableSiteConfig): void {
     )
   }
 
-  // defaultLang：非法值直接抛错，避免路由与词条错位
   if (!SUPPORTED_LANGS.includes(config.defaultLang as (typeof SUPPORTED_LANGS)[number])) {
     // 中文：`defaultLang` 只能是 "zh" / "ja" / "en" 之一。
     throw new Error(
@@ -38,7 +28,20 @@ export function validateSiteConfig(config: ValidatableSiteConfig): void {
     )
   }
 
-  // musicPlayer：仅在启用时校验必需字段完整性
+  validatePet(config)
+  validateMusicPlayer(config)
+}
+
+function validatePet(config: ValidatableSiteConfig): void {
+  const pet = config.pet
+  if (pet && typeof pet.enabled === 'boolean') return
+  // 中文：`pet.enabled` 必须是布尔值，缺失或其它取值会让左下角宠物按关闭处理。
+  console.warn(
+    '[site.config] `pet.enabled` must be a boolean; the pet widget is treated as disabled.',
+  )
+}
+
+function validateMusicPlayer(config: ValidatableSiteConfig): void {
   const player = config.musicPlayer
   if (!player?.enabled) return
 

@@ -1,0 +1,19 @@
+---
+import '@/styles/Pet.css'
+import { siteConfig } from '@/site.config'
+
+const petEnabled = siteConfig.pet?.enabled === true
+---
+
+{
+  petEnabled && (
+    <div class="pet" data-pet aria-hidden="true">
+      <div class="pet-slide" data-pet-slide>
+        <div class="pet-eyes" data-pet-eyes>
+          <span class="pet-eye" data-pet-eye />
+          <span class="pet-eye" data-pet-eye />
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -96,7 +96,19 @@ export default defineConfig({
       updatePostUpdated({ enabled: siteConfig.autoUpdatePostUpdated }),
     ],
     optimizeDeps: {
-      include: ['photoswipe', 'photoswipe/lightbox', 'astro/virtual-modules/transitions-*.js'],
+      include: [
+        'photoswipe',
+        'photoswipe/lightbox',
+        'astro/virtual-modules/transitions-*.js',
+        '@swup/astro/idle',
+        '@swup/astro/serialise',
+        '@swup/astro/client/Swup',
+        '@swup/astro/client/SwupA11yPlugin',
+        '@swup/astro/client/SwupHeadPlugin',
+        '@swup/astro/client/SwupProgressPlugin',
+        '@swup/astro/client/SwupPreloadPlugin',
+        '@swup/astro/client/SwupScriptsPlugin',
+      ],
     },
     build: {
       minify: 'esbuild',

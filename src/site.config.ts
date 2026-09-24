@@ -107,6 +107,12 @@ export const siteConfig = {
     enabled: false,
     playlist: [] as MusicTrack[],
   },
+
+  // 左下角宠物
+  // Bottom-left pet widget
+  pet: {
+    enabled: true,
+  },
 }
 
 // 配置兜底校验：实现见 lib/siteConfigGuard.ts，此处只调用（校验只做告警 / 报错）
