@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const THIS_FILE = fileURLToPath(import.meta.url)
+const requireFromHere = createRequire(THIS_FILE)
 const POSTS_DIR = path.join(path.dirname(THIS_FILE), '..', 'src', 'content', 'posts')
 const CONTENT_ROOT = path.join(path.dirname(THIS_FILE), '..', 'src', 'content')
 const OUT_FILE = path.join(path.dirname(THIS_FILE), '..', '.generated', 'lqips.json')
@@ -115,7 +117,7 @@ async function main() {
 
   const pending = [...targets.entries()].filter(([key]) => !(key in existing))
   if (pending.length > 0) {
-    const { default: sharp } = await import('sharp')
+    const sharp = requireFromHere('sharp')
     const failed = []
     for (const [key, target] of pending) {
       try {
