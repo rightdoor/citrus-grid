@@ -164,6 +164,7 @@ pnnpm type-check
 - [x] Reading statistics (reserved interface)
 - [x] Article relative links auto conversion
 - [x] Music player component
+- [x] Bottom-left pet (gaze follow / blink / sleep, switchable in the config)
 
 ## Plugins
 
