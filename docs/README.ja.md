@@ -118,13 +118,35 @@ draft: false
 | `pnpm build` | 本番ビルドを実行し、その後 `modulepreload` を自動注入し、インラインスクリプトを圧縮し、`pagefind` を実行してサイト内検索インデックスを生成します |
 | `pnpm preview` | `dist` ビルド成果物をプレビューします |
 | `pnpm check` | Astro の型チェック（`astro check`）を実行します |
-| `pnpm type-check` | TypeScript の型チェック（`tsc --noEmit`、`src` と `scripts` を対象）を実行します |
-| `pnpm new-post [slug]` | 新しい記事テンプレートを作成します（下記参照） |
+| `pnpm type-check` | TypeScript の型チェック（`tsc --noEmit`、`src` と `scripts` を対象） |
+| `pnpm check-i18n` | zh / ja / en の言語パックのキー集合が一致するか検証します |
+| `pnpm check-swup-ignore` | `shouldIgnoreSwup` 内のインライン正規表現が `ASSET_EXT_RE` / `RESERVED_PATH_RE` 定数と一致するか検証します |
+| `pnpm new-post [slug]` | 新しい記事テンプレート `src/content/posts/<slug>.md` を作成します（slug を省略すると当日の日付で命名） |
 | `pnpm format-post-meta` | 全記事の frontmatter フィールドの順序を一括で整列します |
 | `pnpm format` | Biome を使用して `src` をフォーマットします |
 | `pnpm format:all` | Biome を使用してプロジェクト全体（src、scripts、ルート設定ファイル）をチェックし修正します |
 | `pnpm lint` | Biome を使用して `src` をチェックし修正します |
 | `preinstall` | `only-allow pnpm` を自動実行し、pnpm の使用を強制します |
+
+## コミット前のチェック
+
+記事を書き終えたとき（`pnpm build` が md を書き換えて `slug` を補完するため、commit の前に必ず実行）：
+
+```bash
+pnpm format-post-meta
+pnpm build
+pnnpm check
+```
+
+コードを変更したとき：
+
+```bash
+pnpm format:all
+pnpm check
+pnpm type-check
+```
+
+- i18n の文言を変更した場合は `pnpm check-i18n`、`src/lib/url.ts` を変更した場合は `pnpm check-swup-ignore` も実行します。
 
 ## 機能
 

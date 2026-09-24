@@ -119,12 +119,34 @@ draft: false
 | `pnpm preview` | 预览 `dist` 构建产物 |
 | `pnpm check` | Astro 类型检查（`astro check`） |
 | `pnpm type-check` | TypeScript 类型检查（`tsc --noEmit`，覆盖 `src` 与 `scripts`） |
-| `pnpm new-post [slug]` | 新建文章模板（见下方说明） |
+| `pnpm check-i18n` | 校验 zh / ja / en 语言包键集合一致 |
+| `pnpm check-swup-ignore` | 校验 `shouldIgnoreSwup` 内联正则与 `ASSET_EXT_RE` / `RESERVED_PATH_RE` 常量一致 |
+| `pnpm new-post [slug]` | 新建文章模板 `src/content/posts/<slug>.md`（省略 slug 时按当天日期命名） |
 | `pnpm format-post-meta` | 统一重排所有文章 frontmatter 字段顺序 |
 | `pnpm format` | Biome 格式化 `src` |
 | `pnpm format:all` | Biome 检查并修复全项目代码（src、scripts、根目录配置文件） |
 | `pnpm lint` | Biome 检查并修复 `src` |
 | `preinstall` | 自动执行 `only-allow pnpm`，强制使用 pnpm |
+
+## 提交前检查
+
+*文章写完提交前（`pnpm build` 会改写 md 补全 `slug`，必须在 commit 之前执行）：
+
+```bash
+pnpm format-post-meta
+pnpm build
+pnpm check
+```
+
+代码改完提交前：
+
+```bash
+pnpm format:all
+pnpm check
+pnpm type-check
+```
+
+- 改了 i18n 文案加跑 `pnpm check-i18n`；改了 `src/lib/url.ts` 加跑 `pnpm check-swup-ignore`。
 
 ## 功能
 

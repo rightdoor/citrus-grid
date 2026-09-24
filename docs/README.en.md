@@ -119,12 +119,34 @@ draft: false
 | `pnpm preview` | Preview the `dist` build output |
 | `pnpm check` | Astro type checking (`astro check`) |
 | `pnpm type-check` | TypeScript type checking (`tsc --noEmit`, covers `src` and `scripts`) |
-| `pnpm new-post [slug]` | Create a new article template (see below) |
+| `pnpm check-i18n` | Verifies that the zh / ja / en message key sets match |
+| `pnpm check-swup-ignore` | Verifies that the inline regexes in `shouldIgnoreSwup` match `ASSET_EXT_RE` / `RESERVED_PATH_RE` |
+| `pnpm new-post [slug]` | Create a new article template at `src/content/posts/<slug>.md` (named after today's date when the slug is omitted) |
 | `pnpm format-post-meta` | Reorder frontmatter fields of all articles uniformly |
 | `pnpm format` | Biome formatting for `src` |
 | `pnpm format:all` | Biome check and fix across the entire project (src, scripts, root config files) |
 | `pnpm lint` | Biome check and fix for `src` |
 | `preinstall` | Automatically runs `only-allow pnpm` to enforce pnpm usage |
+
+## Before Committing
+
+After finishing a post (`pnpm build` rewrites the `.md` files to fill in `slug`, so it must run before the commit):
+
+```bash
+pnpm format-post-meta
+pnnpm build
+pnnpm check
+```
+
+After changing code:
+
+```bash
+pnpm format:all
+pnpm check
+pnnpm type-check
+```
+
+- Editing i18n copy? Also run `pnpm check-i18n`; editing `src/lib/url.ts`? Also run `pnpm check-swup-ignore`.
 
 ## Features
 
