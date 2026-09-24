@@ -84,6 +84,11 @@ export default defineConfig({
     sitemap(),
   ],
   vite: {
+    server: {
+      watch: {
+        ignored: ['**/.pnpm-store/**', '**/dist/**'],
+      },
+    },
     plugins: [
       tailwindcss(),
       ensurePostSlugs(),
