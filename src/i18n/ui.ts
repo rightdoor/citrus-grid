@@ -33,7 +33,7 @@ export function useTranslations(lang: Lang) {
         messages[lang],
       )
     if (typeof value !== 'string' && isDev) {
-      console.warn(`[i18n] 缺少文案：${key}（${lang}.json）`)
+      console.warn(`[i18n] missing message: ${key} (${lang}.json)`)
     }
     let text = typeof value === 'string' ? value : key
     if (params) {

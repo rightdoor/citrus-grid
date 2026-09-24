@@ -8,7 +8,6 @@ export const defaultLang: Lang = siteConfig.defaultLang
 
 export function getLangFromUrl(url: URL): Lang {
   const [, seg] = url.pathname.split('/')
-  if (langs.includes(seg as Lang) && seg !== defaultLang) return seg as Lang
   if (langs.includes(seg as Lang)) return seg as Lang
   return defaultLang
 }

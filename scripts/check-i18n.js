@@ -25,18 +25,22 @@ for (const lang of LANGS) {
   const extra = [...keys[lang]].filter((k) => !base.has(k))
   if (missing.length) {
     failed = true
-    console.error(`[check-i18n] ${lang}.json 缺少 ${missing.length} 个键（${BASE}.json 中存在）：`)
+    console.error(
+      `[check-i18n] ${lang}.json is missing ${missing.length} key(s) present in ${BASE}.json:`,
+    )
     for (const k of missing.sort()) console.error(`  - ${k}`)
   }
   if (extra.length) {
     failed = true
-    console.error(`[check-i18n] ${lang}.json 多出 ${extra.length} 个键（${BASE}.json 中不存在）：`)
+    console.error(
+      `[check-i18n] ${lang}.json has ${extra.length} extra key(s) not present in ${BASE}.json:`,
+    )
     for (const k of extra.sort()) console.error(`  + ${k}`)
   }
 }
 
 if (failed) {
-  console.error(`[check-i18n] 失败：${LANGS.join(' / ')} 的键集合不一致`)
+  console.error(`[check-i18n] FAILED: key sets differ across ${LANGS.join(' / ')}`)
   process.exit(1)
 }
-console.log(`[check-i18n] OK：${LANGS.join(' / ')} 各 ${base.size} 个键完全一致`)
+console.log(`[check-i18n] OK: ${LANGS.join(' / ')} share the same ${base.size} keys`)
