@@ -26,6 +26,14 @@ export function smoothScrollToHeading(id: string): HTMLElement | null {
   return el
 }
 
+type ExecCommandFn = (this: Document, commandId: string) => boolean
+
+function execCopyFallback() {
+  const execCommand = (document as unknown as { execCommand?: ExecCommandFn }).execCommand
+  if (typeof execCommand !== 'function') return
+  execCommand.call(document, 'copy')
+}
+
 function copyTextFallback(text: string) {
   const ta = document.createElement('textarea')
   ta.value = text
@@ -33,7 +41,7 @@ function copyTextFallback(text: string) {
   document.body.appendChild(ta)
   ta.select()
   try {
-    document.execCommand('copy')
+    execCopyFallback()
   } catch {
     /* ignore */
   }

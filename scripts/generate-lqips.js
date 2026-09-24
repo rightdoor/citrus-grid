@@ -1,10 +1,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-
-const require = createRequire(import.meta.url)
 
 const THIS_FILE = fileURLToPath(import.meta.url)
 const POSTS_DIR = path.join(path.dirname(THIS_FILE), '..', 'src', 'content', 'posts')
@@ -118,7 +115,7 @@ async function main() {
 
   const pending = [...targets.entries()].filter(([key]) => !(key in existing))
   if (pending.length > 0) {
-    const sharp = require('sharp')
+    const { default: sharp } = await import('sharp')
     const failed = []
     for (const [key, target] of pending) {
       try {
