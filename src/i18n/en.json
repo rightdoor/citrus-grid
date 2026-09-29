@@ -105,6 +105,13 @@
     "showClock": "Show clock",
     "showProfile": "Show profile"
   },
+  "pet": {
+    "dialogLabel": "Pet options",
+    "title": "Do you want to close me?",
+    "desc": "It will reappear 24 hours after closing.",
+    "confirm": "Close",
+    "restore": "Bring the pet back"
+  },
   "pagination": {
     "prev": "Previous",
     "next": "Next",

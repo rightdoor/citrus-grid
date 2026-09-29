@@ -18,19 +18,30 @@
   );
   bottom: max(var(--pet-bottom), env(safe-area-inset-bottom, 0px));
   z-index: 80;
+  width: var(--pet-size);
+  height: var(--pet-size);
+  pointer-events: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.pet-off .pet {
+  display: none;
+}
+
+.pet-face {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--pet-size);
-  height: var(--pet-size);
   background-color: transparent;
   box-shadow: 0 0 calc(var(--pet-unit) * 0.7) var(--pet-glow);
   overflow: hidden;
   pointer-events: none;
-  user-select: none;
 }
 
-.pet::before {
+.pet-face::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -61,6 +72,171 @@
   will-change: transform;
 }
 
+.pet-card {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 0;
+  width: max-content;
+  max-width: min(236px, calc(100vw - 32px));
+  padding: 11px 13px;
+  border: 1px solid var(--wp-border);
+  border-radius: 12px;
+  background: var(--wp-surface);
+  color: var(--wp-text);
+  box-shadow: var(--wp-shadow-card-hover);
+  transform-origin: 22% 100%;
+  pointer-events: auto;
+}
+
+.pet-card[hidden] {
+  display: none;
+}
+
+.pet-card::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--pet-unit) * 2.6);
+  bottom: -6px;
+  width: 11px;
+  height: 11px;
+  border-right: 1px solid var(--wp-border);
+  border-bottom: 1px solid var(--wp-border);
+  border-bottom-right-radius: 3px;
+  background: var(--wp-surface);
+  transform: rotate(45deg);
+}
+
+.pet-card.is-open {
+  animation: pet-card-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pet-card.is-closing {
+  animation: pet-card-out 150ms ease-in forwards;
+}
+
+.pet-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.pet-card-desc {
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--wp-text-secondary);
+}
+
+.pet-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pet-btn {
+  padding: 5px 11px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.pet-btn:hover {
+  transform: translateY(-1px);
+}
+
+.pet-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.pet-btn-ok {
+  background: var(--wp-accent);
+  color: #fff;
+}
+
+.pet-btn-ok:hover {
+  background: var(--wp-accent-hover);
+}
+
+.pet.is-alert .pet-face {
+  animation: pet-hop 620ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pet-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.pet-cell {
+  position: absolute;
+  width: var(--pet-unit);
+  height: var(--pet-unit);
+  background: var(--pet-ink);
+  will-change: transform, opacity;
+}
+
+.pet.is-leaving .pet-face,
+.pet-assembling .pet-face {
+  box-shadow: none;
+  overflow: visible;
+}
+
+.pet.is-leaving .pet-face::before,
+.pet.is-leaving .pet-slide,
+.pet-assembling .pet-face::before,
+.pet-assembling .pet-slide {
+  opacity: 0;
+}
+
+@keyframes pet-card-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.86);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pet-card-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+}
+
+@keyframes pet-hop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-22%) scale(1.08, 0.92);
+  }
+  65% {
+    transform: translateY(0) scale(0.96, 1.04);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 768px) {
   .pet {
     --pet-bottom: 64px;
@@ -70,7 +246,19 @@
 @media (prefers-reduced-motion: reduce) {
   .pet-slide,
   .pet-eyes,
-  .pet-eye {
+  .pet-eye,
+  .pet-cell {
     will-change: auto;
+  }
+
+  .pet-card,
+  .pet-card.is-open,
+  .pet-card.is-closing,
+  .pet.is-alert .pet-face {
+    animation: none;
+  }
+
+  .pet-btn {
+    transition: none;
   }
 }

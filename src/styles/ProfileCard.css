@@ -58,6 +58,10 @@
   outline-offset: 2px;
 }
 
+.pet-restore[hidden] {
+  display: none;
+}
+
 #profile-card-root.profile-card-leave {
   animation: profile-card-leave 0.16s ease-in both;
 }

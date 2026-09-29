@@ -105,6 +105,13 @@
     "showClock": "显示时钟",
     "showProfile": "显示个人简介"
   },
+  "pet": {
+    "dialogLabel": "宠物选项",
+    "title": "是否需要关闭？",
+    "desc": "关闭后将在24小时后再次出现",
+    "confirm": "关闭",
+    "restore": "唤回宠物"
+  },
   "pagination": {
     "prev": "上一页",
     "next": "下一页",

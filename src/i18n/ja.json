@@ -105,6 +105,13 @@
     "showClock": "時計を表示",
     "showProfile": "プロフィールを表示"
   },
+  "pet": {
+    "dialogLabel": "ペットのオプション",
+    "title": "閉じますか？",
+    "desc": "閉じると 24 時間後にまた現れます。",
+    "confirm": "閉じる",
+    "restore": "ペットを呼び戻す"
+  },
   "pagination": {
     "prev": "前へ",
     "next": "次へ",

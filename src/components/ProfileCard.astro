@@ -7,6 +7,7 @@ import {
   mdiClockOutline,
   mdiDevTo,
   mdiEmailOutline,
+  mdiEye,
   mdiFacebook,
   mdiGithub,
   mdiInstagram,
@@ -40,6 +41,8 @@ const hours = minutes > 0 ? Math.round((minutes / 60) * 10) / 10 : 0
 const articles = posts.length
 
 const statsEnabled = Boolean(siteConfig.statsScript)
+
+const petEnabled = siteConfig.pet?.enabled === true
 
 const numberLocale = { zh: 'zh-CN', ja: 'ja-JP', en: 'en-US' }[lang]
 
@@ -146,6 +149,18 @@ const isExternal = (url: string) => /^(https?:|mailto:)/.test(url)
   </div>
 
   <div class="social-strip">
+    {petEnabled && (
+      <button
+        type="button"
+        class="card-toggle pet-restore"
+        data-pet-restore
+        aria-label={t('pet.restore')}
+        title={t('pet.restore')}
+        hidden
+      >
+        <Icon d={mdiEye} />
+      </button>
+    )}
     <button
       type="button"
       class="card-toggle"
