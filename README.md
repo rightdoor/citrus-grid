@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Astro-%3E%3D7.2.9-brightgreen" alt="Astro Version">
   <img src="https://img.shields.io/github/license/rightdoor/citrus-grid" alt="GitHub License">
   <br>
-  <a href="https://citrusgrid.pages.dev">Demo</a> | <a href="./docs/README.en.md">English</a> | <a href="./docs/README.ja.md">日本語</a>
+  <a href="https://citrusgrid.pages.dev">Demo</a> | <a href="./docs/README.en.md">English</a> | <a href="./docs/README.ja.md">日本語</a> | <a href="https://dev.citrusgrid.pages.dev">Dev Demo</a>
 </div>
 
 ---
