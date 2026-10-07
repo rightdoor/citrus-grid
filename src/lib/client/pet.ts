@@ -119,7 +119,7 @@ function playGrid(grid: HTMLElement, mode: 'dissolve' | 'assemble') {
   return CELL_MAX_ORDER * CELL_STEP + duration
 }
 
-const RESTORE_WIDTH = 42
+const RESTORE_WIDTH = 84
 
 let petRevive: (() => void) | null = null
 let restoreBound = false
