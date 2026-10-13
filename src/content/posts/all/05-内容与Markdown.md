@@ -535,7 +535,9 @@ function normalizeLanguage(raw) {
 | `![图](../images/logo.webp)` | `/content-images/{hash}.webp` |
 | `[不支持](../data/file.json)` | 保持原样 + 构建期警告 |
 
-### 8.2 解析流程（`src/lib/md/rehypeRelativeLinks.ts`）
+### 8.2 解析流程（`src/lib/md/linkResolve.ts`）
+
+解析逻辑集中在 `linkResolve.ts` 的 `resolveHrefTarget()`；`src/lib/md/rehypeRelativeLinks.ts` 只是它的 rehype 外壳（遍历 hast 树、把命中的 `href` 换掉），构建期的反向链接统计（`scripts/ensure-post-slugs.js`）也调用同一个函数，两处判定不会各自漂移。
 
 ```text
 1. 只处理 isRelativeSrc(href) 的链接（非 http(s)/非 //、非 /、非 #、非 data:）
@@ -549,6 +551,8 @@ function normalizeLanguage(raw) {
 5. 若是图片扩展名 → resolveContentImage → /content-images/{hash}.ext
 6. 其他 → 保持原样 + 警告
 ```
+
+`resolveHrefTarget()` 的最后一个参数是警告回调（默认 `warnRelLink`）。反向链接统计会传一个空回调，避免与 `rehypeRelativeLinks` 的构建期警告重复打印。
 
 ### 8.3 构建期警告一览
 

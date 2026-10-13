@@ -16,6 +16,7 @@ import {
   mdiEye,
   mdiFolderOutline,
   mdiLayers,
+  mdiLinkVariant,
   mdiTableOfContents,
   mdiTextRecognition,
   mdiUpdate,
@@ -30,6 +31,7 @@ interface Props {
   nextPost?: Post | null
   seriesPosts?: Post[]
   seriesIdx?: number
+  backlinks?: Post[]
 }
 
 const {
@@ -39,6 +41,7 @@ const {
   nextPost = null,
   seriesPosts = [],
   seriesIdx = -1,
+  backlinks = [],
 } = Astro.props
 const t = useTranslations(lang)
 
@@ -233,9 +236,27 @@ const postYear = post.data.published.getUTCFullYear()
         {t('post.copyright.disclaimer')}
       </div>
     </div>
+    {
+      backlinks.length > 0 && (
+        <div class="mb-5 rounded-[8px] border border-line-light bg-surface px-4 py-3.5 text-[0.85rem] shadow-card">
+          <div class="mb-2 flex items-center gap-1.5 text-[0.78rem] font-semibold tracking-[0.06em] text-ink-3">
+            <Icon d={mdiLinkVariant} class="text-sm" />
+            <span>{t('post.backlinks', { count: backlinks.length })}</span>
+          </div>
+          <ul class="m-0 list-none space-y-1.5 p-0">
+            {backlinks.map((ref) => (
+              <li>
+                <a href={postUrl(ref)} class="text-accent transition hover:text-accent-hover">
+                  {ref.data.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
     <PostNav lang={lang} prev={navPrev} next={navNext} />
   </footer>
-
   <Comments />
 
   {

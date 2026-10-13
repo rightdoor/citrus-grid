@@ -2,12 +2,15 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pinyin } from 'pinyin-pro'
+import { resolveHrefTarget, toPostIndex } from '../src/lib/md/linkResolve.ts'
 
 const THIS_FILE = fileURLToPath(import.meta.url)
 const CONTENT_ROOT = path.join(path.dirname(THIS_FILE), '..', 'src', 'content')
 const POSTS_DIR = path.join(CONTENT_ROOT, 'posts')
-const INDEX_FILE = path.join(path.dirname(THIS_FILE), '..', '.generated', 'post-index.json')
-mkdirSync(path.dirname(INDEX_FILE), { recursive: true })
+const GENERATED_DIR = path.join(path.dirname(THIS_FILE), '..', '.generated')
+const INDEX_FILE = path.join(GENERATED_DIR, 'post-index.json')
+const BACKLINKS_FILE = path.join(GENERATED_DIR, 'backlinks.json')
+mkdirSync(GENERATED_DIR, { recursive: true })
 
 export function titleToSlug(title) {
   const parts = pinyin(String(title), {
@@ -28,6 +31,9 @@ export function titleToSlug(title) {
 }
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const MD_LINK_RE = /\[[^\]]*\]\(\s*([^)\s]+?)(?:\s+["'][^"']*["'])?\s*\)/g
+const REF_LINK_RE = /^[ \t]{0,3}\[[^\]]+\]:[ \t]*(\S+)/gm
+const RAW_HREF_RE = /\bhref=(["'])(.*?)\1/g
 
 function collectMdFiles(dir) {
   const files = []
@@ -46,6 +52,69 @@ function parseFrontmatter(raw) {
     slug: fm.match(/^slug:\s*['"]?([a-z0-9-]+)['"]?\s*$/m)?.[1],
     draft: /^draft:\s*true\s*$/m.test(fm),
   }
+}
+
+function stripNonBody(raw) {
+  const withoutFrontmatter = raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '')
+  const lines = withoutFrontmatter.split(/\r?\n/)
+  const kept = []
+  let fence = null
+  for (const line of lines) {
+    const open = line.match(/^[ \t]{0,3}(```|~~~)/)
+    if (fence) {
+      if (open && open[1] === fence) fence = null
+      continue
+    }
+    if (open) {
+      fence = open[1]
+      continue
+    }
+    kept.push(line)
+  }
+  return kept.join('\n').replace(/`[^`\n]*`/g, '')
+}
+
+function collectHrefs(body) {
+  const hrefs = new Set()
+  for (const [re, group] of [
+    [MD_LINK_RE, 1],
+    [REF_LINK_RE, 1],
+    [RAW_HREF_RE, 2],
+  ]) {
+    re.lastIndex = 0
+    let match
+    while ((match = re.exec(body)) !== null) {
+      const target = match[group]
+      if (target) hrefs.add(target)
+    }
+  }
+  return hrefs
+}
+
+function buildBacklinks(records, index) {
+  const graph = new Map()
+  for (const rec of records) {
+    if (rec.draft && process.env.NODE_ENV === 'production') continue
+    for (const href of collectHrefs(stripNonBody(rec.raw))) {
+      const resolved = resolveHrefTarget(href, rec.full, index, () => {})
+      const match = resolved && /^\/posts\/([^/]+)\//.exec(resolved)
+      if (!match) continue
+      const target = decodeURIComponent(match[1])
+      if (!target || target === rec.slug) continue
+      let sources = graph.get(target)
+      if (!sources) {
+        sources = new Set()
+        graph.set(target, sources)
+      }
+      sources.add(rec.slug)
+    }
+  }
+
+  const out = {}
+  for (const target of [...graph.keys()].sort()) {
+    out[target] = [...graph.get(target)].sort()
+  }
+  return out
 }
 
 export function ensurePostSlugs() {
@@ -99,6 +168,13 @@ export function ensurePostSlugs() {
       if (!existsSync(INDEX_FILE) || readFileSync(INDEX_FILE, 'utf-8') !== next) {
         writeFileSync(INDEX_FILE, next, 'utf-8')
         console.log(`[post-slug] post-index written: ${index.length} entries`)
+      }
+
+      const backlinks = buildBacklinks(records, toPostIndex(index))
+      const nextBacklinks = `${JSON.stringify(backlinks, null, 2)}\n`
+      if (!existsSync(BACKLINKS_FILE) || readFileSync(BACKLINKS_FILE, 'utf-8') !== nextBacklinks) {
+        writeFileSync(BACKLINKS_FILE, nextBacklinks, 'utf-8')
+        console.log(`[post-slug] backlinks written: ${Object.keys(backlinks).length} entries`)
       }
     },
   }
