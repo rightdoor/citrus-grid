@@ -113,6 +113,18 @@ export const siteConfig = {
   pet: {
     enabled: true,
   },
+
+  // 文章页页脚的「相关文章」区块，enabled 为 false 时不渲染（也跳过打分）
+  // Related posts block in the post footer. Set enabled to false to hide it and skip scoring
+  relatedPosts: {
+    enabled: true,
+  },
+
+  // 文章页页脚的「N 篇文章引用本文」区块，enabled 为 false 时不渲染
+  // Backlinks block in the post footer. Set enabled to false to hide it
+  backlinks: {
+    enabled: true,
+  },
 }
 
 // 配置兜底校验：实现见 lib/siteConfigGuard.ts，此处只调用（校验只做告警 / 报错）

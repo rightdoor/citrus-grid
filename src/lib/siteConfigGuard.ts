@@ -7,6 +7,8 @@ export interface ValidatableSiteConfig {
   defaultLang?: unknown
   musicPlayer?: { enabled?: unknown; playlist?: unknown } | null
   pet?: { enabled?: unknown } | null
+  relatedPosts?: { enabled?: unknown } | null
+  backlinks?: { enabled?: unknown } | null
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -30,6 +32,15 @@ export function validateSiteConfig(config: ValidatableSiteConfig): void {
 
   validatePet(config)
   validateMusicPlayer(config)
+  validateToggle(config.relatedPosts?.enabled, 'relatedPosts.enabled')
+  validateToggle(config.backlinks?.enabled, 'backlinks.enabled')
+}
+
+function validateToggle(value: unknown, path: string): void {
+  if (value === undefined || typeof value === 'boolean') return
+  console.warn(
+    `[site.config] \`${path}\` must be a boolean; the default (enabled) is used instead.`,
+  )
 }
 
 function validatePet(config: ValidatableSiteConfig): void {

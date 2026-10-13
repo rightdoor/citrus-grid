@@ -5,11 +5,14 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 import { loadBacklinks, resolveBacklinks } from '@/lib/backlinks'
 import { getPublishedPosts, type Post, seriesOf, sortSeriesPosts } from '@/lib/posts'
 import { relatedPostsOf } from '@/lib/relatedPosts'
+import { siteConfig } from '@/site.config'
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts()
-  const backlinkMap = loadBacklinks()
-  const backlinks = resolveBacklinks(backlinkMap, posts)
+  const relatedEnabled = siteConfig.relatedPosts?.enabled !== false
+  const backlinksEnabled = siteConfig.backlinks?.enabled !== false
+  const backlinkMap = relatedEnabled || backlinksEnabled ? loadBacklinks() : {}
+  const backlinkIndex = backlinksEnabled ? resolveBacklinks(backlinkMap, posts) : null
   return posts.map((post: Post, idx: number) => {
     const seriesName = seriesOf(post)
     const seriesPosts = seriesName
@@ -24,8 +27,8 @@ export async function getStaticPaths() {
         nextPost: idx < posts.length - 1 ? posts[idx + 1] : null,
         seriesPosts,
         seriesIdx,
-        backlinks: backlinks.get(post.id) ?? [],
-        related: relatedPostsOf(post, posts, { backlinks: backlinkMap }),
+        backlinks: backlinkIndex?.get(post.id) ?? [],
+        related: relatedEnabled ? relatedPostsOf(post, posts, { backlinks: backlinkMap }) : [],
       },
     }
   })
