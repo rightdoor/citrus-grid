@@ -125,12 +125,14 @@ draft: false
 | --- | --- |
 | `pnpm dev` / `start` | 启动开发服务器 |
 | `pnpm build` | 生产构建，随后自动注入 `modulepreload`、压缩内联脚本，并执行 `pagefind` 生成站内搜索索引 |
+| `pnpm build:fresh` | 先清 Astro 缓存（`.astro`、`node_modules/.astro`、`node_modules/.cache/jiti`）再构建，用于绕开缓存导致的「改了 markdown 插件但页面没变化」 |
 | `pnpm preview` | 预览 `dist` 构建产物 |
 | `pnpm check` | Astro 类型检查（`astro check`） |
 | `pnpm type-check` | TypeScript 类型检查（`tsc --noEmit`，覆盖 `src` 与 `scripts`） |
 | `pnpm check-i18n` | 校验 zh / ja / en 语言包键集合一致 |
 | `pnpm check-swup-ignore` | 校验 `shouldIgnoreSwup` 内联正则与 `ASSET_EXT_RE` / `RESERVED_PATH_RE` 常量一致 |
-| `pnpm new-post [slug]` | 新建文章模板 `src/content/posts/<slug>.md`（省略 slug 时按当天日期命名） |
+| `pnpm verify` | 依次执行 `astro check`、`tsc --noEmit`、`check-i18n`、`check-swup-ignore`，任一失败即中断 |
+| `pnpm new-post [slug] [--mdx]` | 新建文章模板 `src/content/posts/<slug>.md`；带 `--mdx` 时改为生成带 Callout 导入的 `.mdx` 模板（省略 slug 时按当天日期命名） |
 | `pnpm format-post-meta` | 统一重排所有文章 frontmatter 字段顺序 |
 | `pnpm format` | Biome 格式化 `src` |
 | `pnpm format:all` | Biome 检查并修复全项目代码（src、scripts、根目录配置文件） |
@@ -203,7 +205,7 @@ pnpm type-check
 | [03-主题与样式定制.md](src/content/posts/all/03-主题与样式定制.md) | `--wp-*` 变量全表、暗色模式、换肤步骤 |
 | [04-站点配置.md](src/content/posts/all/04-站点配置.md) | `site.config.ts` 等 6 个配置文件的参数表 |
 | [05-内容与Markdown.md](src/content/posts/all/05-内容与Markdown.md) | Frontmatter 表、markdown 插件链、图片与相对链接 |
-| [06-构建与脚本.md](src/content/posts/all/06-构建与脚本.md) | 6 个构建脚本、产物结构、部署 |
+| [06-构建与脚本.md](src/content/posts/all/06-构建与脚本.md) | 7 个构建脚本、产物结构、部署 |
 | [07-页面与路由.md](src/content/posts/all/07-页面与路由.md) | 路由表、SEO、i18n 现状与扩展 |
 | [08-插件系统.md](src/content/posts/all/08-插件系统.md) | 评论 / 统计插件契约、音乐播放器 |
 | [09-常见改造与排错.md](src/content/posts/all/09-常见改造与排错.md) | 任务式改造速查、FAQ、自检清单 |
