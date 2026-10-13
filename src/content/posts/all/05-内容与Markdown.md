@@ -181,7 +181,7 @@ loader 的 `pattern: '**/*.{md,mdx}'` 会递归扫描。相对链接的解析也
 | 数学公式 | ✅ | `remarkMath` + `rehypeKatex` | 行内 `$…$`、块级 `$$…$$`；KaTeX 的 CSS 按需加载（见下） |
 | Emoji 短代码 | ✅ | `remarkEmoji` | `:smile:` → 😄 |
 | 自动链接 | ✅ | GFM | `<https://…>`、`www.example.com` |
-| 内联 HTML | ✅ 页面 / ❌ RSS | 由 Astro 的 markdown 处理器保留 raw 节点 | 页面正常输出原生标签；RSS 会被 XML 转义，见下方警告 |
+| 内联 HTML | ✅ 页面 / ✅ RSS | 由 Astro 的 markdown 处理器保留 raw 节点 | 页面输出原生标签；RSS 的 `content:encoded` 用 CDATA 包裹，见下方说明 |
 | 提示容器 | ✅ | `remarkContainers`（自定义） | `:::info` / `tip` / `warning` / `danger` / `details` |
 | MDX / 组件嵌入 | ✅（`.mdx`） | `@astrojs/mdx` | 表达式、JSX、`import` 组件，与 `.md` 共用同一套插件链，见 4.1 |
 | 缩进式代码块（4 空格） | ❌ | — | 见下方说明 |
@@ -204,19 +204,17 @@ loader 的 `pattern: '**/*.{md,mdx}'` 会递归扫描。相对链接的解析也
 >
 > 自查方式：DevTools → Network 过滤 `katex`；或 `performance.getEntriesByType('resource')` 里搜索 `katex`。
 
-> 内联 HTML 可用，但 RSS 里会被 XML 转义
+> 内联 HTML：页面与 RSS 都以原生标签输出
 
 页面渲染：✅ 正常。 已实测 `dist/posts/markdown-yu-fa-yang-li/index.html` 中 `<kbd>Ctrl</kbd>`、`<span style="color:red;">红色文字</span>` 都是以原生标签输出的（Astro 的 markdown 处理器内部开启了 `allowDangerousHtml` 并把 raw 节点保留到最终 HTML）。
 
-RSS：⚠️ HTML 会被转义。 `<content:encoded>` 里输出的是 `&lt;p&gt;&lt;kbd&gt;Ctrl&lt;/kbd&gt;…`。这是 `@astrojs/rss` 对 `content` 字段做 XML 转义的既定行为（已用最小用例实测确认，与 `renderMarkdownHtml` 无关——后者本身输出的仍是原生 HTML）。
+RSS：✅ 已改为 CDATA 包裹。 早期版本里 `<content:encoded>` 输出的是 `&lt;p&gt;&lt;kbd&gt;Ctrl&lt;/kbd&gt;…`，原因是 `@astrojs/rss` 会对 `content` 字段做 XML 转义且没有关闭开关（与 `renderMarkdownHtml` 无关——后者本身输出的仍是原生 HTML）。现在 `src/pages/rss.xml.ts` 不再走 `@astrojs/rss`，而是自己拼整份 XML：
 
-受影响的表现：部分阅读器会按字面显示 `<p>` 标签；也有阅读器会自动反转义后正常渲染。 若你重度依赖 RSS 的富文本展示，需要自行把 `content:encoded` 改成 CDATA 包裹，例如：
+- `content:encoded` 用 `cdata()` 包裹，`]]>` 按 XML 规则拆成 `]]]]><![CDATA[>`；
+- `title` / `link` / `description` / `category` 等文本节点仍走 `escapeXml()` 转义；
+- `link` 与 `guid` 自己拼成绝对 URL，`pubDate` 用 `toUTCString()`（RFC 822），与原行为一致。
 
-```ts
-// src/pages/rss.xml.ts —— 自己拼 XML，而不是交给 @astrojs/rss
-const escaped = html.replace(/]]>/g, ']]]]><![CDATA[>')
-const customData = `<content:encoded><![CDATA[${escaped}]]></content:encoded>`
-```
+自查：`grep -c '&lt;p&gt;' dist/rss.xml` 应为 `0`；`<!\[CDATA\[` 与 `]]>` 的出现次数应相等。
 
 > 内联 HTML 的安全边界
 
