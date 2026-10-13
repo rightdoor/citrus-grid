@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build && node scripts/postbuild.js",
+    "build:fresh": "node scripts/clean-cache.js && pnpm build",
     "preview": "astro preview",
     "check": "astro check",
     "type-check": "tsc --noEmit",
