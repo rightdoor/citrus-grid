@@ -1,4 +1,5 @@
 import { unified } from '@astrojs/markdown-remark'
+import mdx from '@astrojs/mdx'
 import sitemap from '@astrojs/sitemap'
 import swup from '@swup/astro'
 import tailwindcss from '@tailwindcss/vite'
@@ -18,6 +19,7 @@ import zhJson from './src/i18n/zh.json'
 import { rehypeCodeBlock } from './src/lib/md/rehypeCodeBlock.ts'
 import { rehypeExternalLinks } from './src/lib/md/rehypeExternalLinks.ts'
 import { rehypeImages } from './src/lib/md/rehypeImages.ts'
+import { rehypeRawToElements } from './src/lib/md/rehypeRawToElements.ts'
 import { rehypeRelativeLinks } from './src/lib/md/rehypeRelativeLinks.ts'
 import { rehypeTableWrap } from './src/lib/md/rehypeTableWrap.ts'
 import { remarkContainers } from './src/lib/md/remarkContainers.ts'
@@ -47,6 +49,7 @@ export default defineConfig({
         rehypeKatex,
         rehypeCodeBlock,
         rehypeImages,
+        rehypeRawToElements,
         rehypeRelativeLinks,
         rehypeTableWrap,
         [rehypeExternalLinks, { site }],
@@ -67,6 +70,7 @@ export default defineConfig({
     }),
   },
   integrations: [
+    mdx(),
     swup({
       theme: false,
       animationClass: 'transition-swup-',

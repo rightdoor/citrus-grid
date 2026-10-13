@@ -21,7 +21,7 @@ published: 2026-09-16 19:04:41
 | [`02-组件说明.md`](./02-组件说明.md) | 全部 19 个 Astro 组件的 Props 表、DOM 结构、事件协议（含布局） | 要改卡片 / 头部 / 目录 / 播放器 |
 | [`03-主题与样式定制.md`](./03-主题与样式定制.md) | `--wp-*` CSS 变量全表、暗色模式、Tailwind 桥接、动画、换肤步骤 | 要换主色 / 换字体 / 改圆角 |
 | [`04-站点配置.md`](./04-站点配置.md) | `site.config.ts` 逐字段参数表 + `astro.config.mjs` / `tsconfig` / `biome` / `pagefind` | 要改站点信息、导航、首页分页 |
-| [`05-内容与Markdown.md`](./05-内容与Markdown.md) | 文章 Frontmatter 表、目录约定、markdown 插件链、相对链接、图片、容器语法 | 要写文章 / 改渲染行为 |
+| [`05-内容与Markdown.md`](./05-内容与Markdown.md) | 文章 Frontmatter 表、目录约定、markdown 插件链、MDX 支持、相对链接、图片、容器语法 | 要写文章 / 改渲染行为 |
 | [`06-构建与脚本.md`](./06-构建与脚本.md) | 6 个 `scripts/*.js` 的作用与参数、构建产物结构、部署方式 | 要改构建流程 / 排构建错误 |
 | [`07-页面与路由.md`](./07-页面与路由.md) | 路由表、`getStaticPaths` 逻辑、SEO/JSON-LD、i18n 现状 | 要加页面 / 改 URL 规则 |
 | [`08-插件系统.md`](./08-插件系统.md) | 评论插件、统计插件接口契约、音乐播放器、检索 | 要接 Waline / Giscus / 自建统计 |
@@ -32,7 +32,7 @@ published: 2026-09-16 19:04:41
 CitrusGrid 是一个纯静态的 Astro 博客主题：
 
 ```text
-Markdown 文章 (src/content/posts/*.md)
+Markdown / MDX 文章 (src/content/posts/*.{md,mdx})
         │
         ├─ astro build ──► dist/*.html（构建期全量预渲染，客户端几乎零 JS）
         │                        │
@@ -66,6 +66,7 @@ Markdown 文章 (src/content/posts/*.md)
 | 接入自建访问统计 | [08-插件系统.md#3](./08-插件系统.md#3-统计插件) |
 | 开启音乐播放器 / 加歌 | [08-插件系统.md#4](./08-插件系统.md#4-音乐播放器) |
 | 加一个 Markdown 提示容器类型 | [05-内容与Markdown.md#5](./05-内容与Markdown.md#5-提示容器remarkcontainers) |
+| 在文章里用 MDX 写表达式 / JSX / 组件 | [05-内容与Markdown.md#4.1](./05-内容与Markdown.md#41-mdxmdx文章支持) |
 | 改代码块的语言图标 / 行号 | [05-内容与Markdown.md#6](./05-内容与Markdown.md#6-代码块实现与可调参数) |
 | 加一个自定义图标 | [02-组件说明.md#4A](./02-组件说明.md#4a-图标系统srclibiconsts) |
 | 部署到 Cloudflare Pages 等静态托管 | [06-构建与脚本.md#9](./06-构建与脚本.md#9-部署) |

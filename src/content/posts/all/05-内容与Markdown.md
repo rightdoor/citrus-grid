@@ -14,8 +14,8 @@ published: 2026-09-16 19:08:29
 
 | 项 | 约定 |
 | --- | --- |
-| 存放位置 | `src/content/posts/**/*.md`（支持子目录，loader 的 `pattern: '**/*.md'`） |
-| 文件格式 | 仅 `.md`（不支持 `.mdx`，未来计划） |
+| 存放位置 | `src/content/posts/**/*.{md,mdx}`（支持子目录，loader 的 `pattern: '**/*.{md,mdx}'`） |
+| 文件格式 | `.md` 与 `.mdx`（MDX 额外支持表达式、JSX 与组件导入，见 4.1） |
 | URL 来源 | frontmatter 的 `slug`（最终成为 `post.id`），与文件名无关 |
 | 图片位置 | 任意位置，只要在 `src/content/` 下即可（通过 `/content-images/{hash}.ext` 路由访问） |
 | 派生数据 | `.generated/post-index.json`（由构建脚本生成，不要手改） |
@@ -160,7 +160,7 @@ src/content/posts/
     └── 2026-01.md
 ```
 
-loader 的 `pattern: '**/*.md'` 会递归扫描。相对链接的解析也支持跨目录（见#8）。
+loader 的 `pattern: '**/*.{md,mdx}'` 会递归扫描。相对链接的解析也支持跨目录（见#8）。
 
 ## 4. Markdown 语法支持矩阵
 
@@ -183,7 +183,7 @@ loader 的 `pattern: '**/*.md'` 会递归扫描。相对链接的解析也支持
 | 自动链接 | ✅ | GFM | `<https://…>`、`www.example.com` |
 | 内联 HTML | ✅ 页面 / ❌ RSS | 由 Astro 的 markdown 处理器保留 raw 节点 | 页面正常输出原生标签；RSS 会被 XML 转义，见下方警告 |
 | 提示容器 | ✅ | `remarkContainers`（自定义） | `:::info` / `tip` / `warning` / `danger` / `details` |
-| MDX / 组件嵌入 | ❌ | — | 见 `AboutPage` 的「未来计划」 |
+| MDX / 组件嵌入 | ✅（`.mdx`） | `@astrojs/mdx` | 表达式、JSX、`import` 组件，与 `.md` 共用同一套插件链，见 4.1 |
 | 缩进式代码块（4 空格） | ❌ | — | 见下方说明 |
 
 > 数学公式的 CSS 按需加载
@@ -227,6 +227,30 @@ Markdown 里写什么 HTML 就会输出什么（无净化）。不要在文章�
 `Markdown语法样例.md` 明确提示：「请勿使用缩进 4 个空格或一个制表符来创建代码块，因为不会显示。」
 
 原因是 `remarkBreaks` 把单换行转为 `<br>`，缩进块在解析阶段的边界行为与预期不符。请统一用围栏代码块 ``` ``` ```。
+
+### 4.1 MDX（`.mdx`）文章支持
+
+`.mdx` 与 `.md` 共用同一套 markdown 处理器，只是多了一层 MDX 编译，因此上文矩阵里的语法能力全部保留，额外获得三类能力：
+
+| 能力 | 写法 | 说明 |
+| --- | --- | --- |
+| 内联表达式 | `{2 ** 10}` | 任意 JavaScript 表达式，构建期求值后静态输出 |
+| 导出变量 | 文件顶部 `export const year = 2026`，正文写 `{year}` | 全篇可引用 |
+| JSX 与组件导入 | `import Callout from '../../components/mdx/Callout.astro'`，正文写 `<Callout type="tip" title="标题">内容</Callout>` | 导入路径相对当前文章文件解析；组件的子内容支持 Markdown |
+
+接入只需两处：`astro.config.mjs` 的 `integrations` 加 `mdx()`，`content.config.ts` 的 loader `pattern` 改为 `'**/*.{md,mdx}'`。`mdx()` 默认 `extendMarkdownConfig: true`，直接复用 `markdown.processor` 的自定义 unified 管线（`rehypeCodeBlock`、`remarkContainers`、`rehypeKatex` 等全部生效），不需要为 MDX 另维护一份插件链。
+
+与 `.md` 的差异点：
+
+| 差异 | 说明 |
+| --- | --- |
+| `raw` 节点转换 | `rehypeCodeBlock` / `rehypeImages` 会把节点替换成 `raw` 类型，`.md` 交给 `rehypeStringify` 直出，`@mdx-js` 编译阶段则不识别 `raw`。`src/lib/md/rehypeRawToElements.ts`（仅对 `.mdx` 生效）负责把 `raw` 逐个解析成真实 hast 元素；必须逐节点包 wrapper 树解析，不能对整棵树调 `rehype-raw`——MDX 管线最前面已有一次内置的 `rehype-raw` 往返，二次整树往返会把解析结果重复插入 |
+| 图片写法 | 用 Markdown 语法 `![alt](../images/x.webp)`。写成 JSX 的 `<img src="…">` 不经过 `rehypeImages`，没有 `.img-frame` 灯箱与 LQIP 占位（`generate-lqips.js` 的扫描正则同样只认 Markdown 图片语法） |
+| 裸花括号 | 正文里单独出现的 `{` 会按表达式解析，写普通文本要用反引号包裹（如 `` `{}` ``）或转义成 `\{` |
+| 字数统计 | `post.body` 对 `.mdx` 保留的是 MDX 源码，`wordCount()` / `readMinutes()` 直接可用（JSX 标签会按词计入，略有高估） |
+| RSS | `.mdx` 条目不走 `pipeline.ts`，由 `astro/container` 把 `render(post)` 的 Content 组件渲染成 HTML（见 [07-页面与路由.md#4.4](./07-页面与路由.md#44-rsssrcpagesrssxmlts)） |
+
+完整示例见 `src/content/posts/MDX示例文章.mdx`（slug：`mdx-example`），演示了表达式、导出变量、`.map()` 列表、内联样式与 `src/components/mdx/Callout.astro` 组件的导入用法。
 
 ## 5. 提示容器（`remarkContainers`）
 

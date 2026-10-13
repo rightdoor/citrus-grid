@@ -63,7 +63,7 @@ function collectMdFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name)
     if (entry.isDirectory()) files.push(...collectMdFiles(full))
-    else if (entry.isFile() && entry.name.endsWith('.md')) files.push(full)
+    else if (entry.isFile() && /\.mdx?$/.test(entry.name)) files.push(full)
   }
   return files
 }

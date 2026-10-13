@@ -110,6 +110,15 @@ draft: false
 | `updated` | 否 | 2026-01-01 00:01:03 | 文章更新时间，格式为`YYYY-MM-DD HH:mm:ss`，启动和构建时由脚本按文件修改时间自动写入（可在 `site.config.ts` 关闭） |
 | `draft` | 否 | false | 是否草稿，不自动生成 |
 
+## 文章格式
+
+文章统一放在 `src/content/posts/` 目录下，同时支持 `.md` 与 `.mdx` 两种扩展名，frontmatter 字段完全一致：
+
+- `.md`：纯 Markdown 写作；
+- `.mdx`：在 Markdown 基础上支持内联表达式（`{1 + 1}`）、JSX 与 `import` 引入组件（参考 `src/components/mdx/Callout.astro`），并与 `.md` 共用同一套 remark/rehype 管线（代码高亮、数学公式、脚注、提示容器、图片 LQIP、相对链接解析等均可用）。注意正文中的裸花括号会被当作表达式解析，普通文本需用反引号包裹或转义。
+
+参考示例：[MDX 示例文章](src/content/posts/MDX示例文章.mdx)。
+
 ## 命令说明
 
 | 命令 | 作用 |
