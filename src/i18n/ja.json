@@ -39,6 +39,7 @@
     "copied": "コピーしました",
     "footnotes": "脚注",
     "backlinks": "この記事を引用している記事が {count} 件あります",
+    "related": "関連記事",
     "copyright": {
       "author": "著作権所有 © {year}",
       "licenseLabel": "ライセンス",

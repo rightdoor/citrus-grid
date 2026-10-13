@@ -4,10 +4,12 @@ import { defaultLang } from '@/i18n/ui'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { loadBacklinks, resolveBacklinks } from '@/lib/backlinks'
 import { getPublishedPosts, type Post, seriesOf, sortSeriesPosts } from '@/lib/posts'
+import { relatedPostsOf } from '@/lib/relatedPosts'
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts()
-  const backlinks = resolveBacklinks(loadBacklinks(), posts)
+  const backlinkMap = loadBacklinks()
+  const backlinks = resolveBacklinks(backlinkMap, posts)
   return posts.map((post: Post, idx: number) => {
     const seriesName = seriesOf(post)
     const seriesPosts = seriesName
@@ -23,13 +25,22 @@ export async function getStaticPaths() {
         seriesPosts,
         seriesIdx,
         backlinks: backlinks.get(post.id) ?? [],
+        related: relatedPostsOf(post, posts, { backlinks: backlinkMap }),
       },
     }
   })
 }
 
 const lang = defaultLang
-const { post, prevPost, nextPost, seriesPosts = [], seriesIdx = -1, backlinks = [] } = Astro.props
+const {
+  post,
+  prevPost,
+  nextPost,
+  seriesPosts = [],
+  seriesIdx = -1,
+  backlinks = [],
+  related = [],
+} = Astro.props
 const firstImage = post.body?.match(/!\[[^\]]*\]\(([^)\s]+)/)?.[1]
 ---
 
@@ -51,5 +62,6 @@ const firstImage = post.body?.match(/!\[[^\]]*\]\(([^)\s]+)/)?.[1]
     seriesPosts={seriesPosts}
     seriesIdx={seriesIdx}
     backlinks={backlinks}
+    related={related}
   />
 </BaseLayout>
