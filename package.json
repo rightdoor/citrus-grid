@@ -10,6 +10,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "type-check": "tsc --noEmit",
+    "verify": "pnpm check && pnpm type-check && pnpm check-i18n && pnpm check-swup-ignore",
     "new-post": "node scripts/new-post.js",
     "check-i18n": "node scripts/check-i18n.js",
     "check-swup-ignore": "node scripts/check-swup-ignore.js",
