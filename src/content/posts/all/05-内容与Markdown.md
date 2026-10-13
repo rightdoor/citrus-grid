@@ -62,7 +62,7 @@ draft: false
 | `series` | `string` | 否 | 无（不填=不连载） | 系列名。同一主题 ≥3 篇、需按顺序阅读时填写；零散文章不填 | `z.string().trim().optional()`，空串视为无系列 |
 | `series_order` | `number` | 否 | — | 系列内阅读顺序（从 1 开始），仅配合 `series` 使用 | `int().min(1)`；缺省按发布时间升序兜底排序 |
 
-> 系列使用规则：系列是与分类/标签互不影响的**可选**属性。判定标准——同一主题已有 **3 篇以上**且**需按顺序阅读**（如连载教程）才建系列，零散文章不填。有 `series` 的文章会出现在 `/series/` 系列页与独立的系列总览页；文章页会显示系列信息（头部一行 + 可折叠的系列目录），底部上一篇/下一篇在系列内按 `series_order` 相邻衔接。系列内排序规则：`series_order` 升序 → 发布时间升序兜底。
+> 系列使用规则：系列是与分类/标签互不影响的可选属性。判定标准——同一主题已有 3 篇以上且需按顺序阅读（如连载教程）才建系列，零散文章不填。有 `series` 的文章会出现在 `/series/` 系列页与独立的系列总览页；文章页会显示系列信息（头部一行 + 可折叠的系列目录），底部上一篇/下一篇在系列内按 `series_order` 相邻衔接。系列内排序规则：`series_order` 升序 → 发布时间升序兜底。
 
 ### 2.1 `normalizeList()` 的确切行为
 
@@ -186,7 +186,7 @@ loader 的 `pattern: '**/*.{md,mdx}'` 会递归扫描。相对链接的解析也
 | 任务列表 | ✅ | GFM | `accent-color: var(--wp-accent)` |
 | 表格 | ✅ | GFM + `rehypeTableWrap` | 外包 `.table-wrapper` 支持横向滚动；首列 `white-space: nowrap` |
 | 链接 | ✅ | 原生 + `rehypeExternalLinks` | 站外链接自动 `target="_blank"`（按 host 判断，同 host 不加） |
-| 图片 | ✅ | `rehypeImages` | 包 `.img-frame` + `a.img-lightbox`；首图 eager，其余 lazy；注入 LQIP 渐变 |
+| 图片 | ✅ | `rehypeImages` | 包 `.img-frame` + `a.img-lightbox`；首图 eager，其余 lazy；注入 LQIP 渐变与 `width`/`height`（防布局位移） |
 | 引用块 `>` | ✅ | 原生 | 左侧 3px 主题色边框 + 4% 主题色底 |
 | 行内代码 / 代码块 | ✅ | `rehypeCodeBlock`（Prism） | 带语言图标、行号、复制按钮；19 个 Prism 语法组件 |
 | 水平线 | ✅ | 原生 | `---` / `***` / `___` |
@@ -468,9 +468,9 @@ function normalizeLanguage(raw) {
 `rehypeImages` 会把每个 `<img>` 包成：
 
 ```html
-<span class="img-frame" style="--img-lqip:linear-gradient(135deg,#aabbcc 0%,#ddeeff 50%,#112233 100%)">
+<span class="img-frame is-sized" style="--img-lqip:linear-gradient(135deg,#aabbcc 0%,#ddeeff 50%,#112233 100%)">
   <a class="img-lightbox" href="{src}" title="…">
-    <img src="{src}" alt="…" loading="lazy" decoding="async" />
+    <img src="{src}" alt="…" width="512" height="512" loading="lazy" decoding="async" />
   </a>
 </span>
 ```
@@ -481,17 +481,20 @@ function normalizeLanguage(raw) {
 | 其余图 | `loading="lazy" decoding="async"` |
 | `data:` 开头的 src | 跳过包装，不处理 |
 | `title` 属性 | 存在则同时写到 `<img>` 与 `<a>` |
+| 尺寸已知 | 加 `is-sized` 类并写 `width`/`height`（来自 `.generated/lqips.json`）；`.img-frame.is-sized` 在加载期就用 `width: fit-content` 贴合图片，因此不会先撑满容器再回缩 |
+| 尺寸未知 | 保持 `class="img-frame"`，加载期仍是 `min-height: 8rem` 的 shimmer 骨架（`public/` 图片、外链图片、SVG 等） |
 
 ### 7.2 LQIP（主色渐变占位）
 
 | 环节 | 实现 |
 | --- | --- |
-| 采样 | `scripts/generate-lqips.js`：`sharp(input).resize(2,2,{fit:'fill'}).removeAlpha().raw()` 取 4 像素，再用第 1、2、4 个像素（偏移 0、3、9 字节）拼成 18 位十六进制 |
-| 存储 | `.generated/lqips.json`：`{ "/content-images/883d9fc6f4cc516e.webp": "632d1b6a301b582816" }`（18 位无分隔符十六进制，3 个像素直接拼接） |
-| 消费 | `rehypeImages.ts` 读取（带 mtime 缓存），生成 `--img-lqip` 的 `linear-gradient(135deg, c1 0%, c2 50%, c3 100%)` |
+| 采样 | `scripts/generate-lqips.js`：`sharp(input).metadata()` 取原始宽高，再 `sharp(input).resize(2,2,{fit:'fill'}).removeAlpha().raw()` 取 4 像素，用第 1、2、4 个像素（偏移 0、3、9 字节）拼成 18 位十六进制 |
+| 存储 | `.generated/lqips.json`：`{ "/content-images/883d9fc6f4cc516e.webp": { "c": "632d1b6a301b582816", "w": 512, "h": 512 } }`（`c` 是 3 个像素拼接的 18 位十六进制，`w`/`h` 是原始尺寸） |
+| 消费 | `rehypeImages.ts` 读取（带 mtime 缓存）：`c` → `--img-lqip` 的 `linear-gradient(135deg, c1 0%, c2 50%, c3 100%)`；`w`/`h` → `<img>` 的 `width`/`height` 与 `.img-frame` 的 `is-sized` 类 |
+| 旧格式兼容 | 读到 `"c"` 形态的字符串（早期版本）或缺少 `w`/`h` 的条目时按「无尺寸」处理：仍生成渐变，但不写 `width`/`height`；下次构建会自动重算成新结构 |
 | 兜底 | 取色失败 → 无 `--img-lqip` → CSS 回退灰白 shimmer（`markdown.css` 的 `.img-frame:not(.is-loaded)`） |
 | 强制重算 | `LQIP_FORCE=1 pnpm build`（PowerShell：`$env:LQIP_FORCE=1; pnpm build`） |
-| 增量 | 默认只处理 `.generated/lqips.json` 里没有的 key，已存在的跳过（改了图片文件内容但路径不变时不会重算，需 `LQIP_FORCE=1`） |
+| 增量 | 默认只处理 `.generated/lqips.json` 里不是当前结构的 key（缺 `c`/`w`/`h` 都会重算）；改了图片文件内容但路径不变时不会重算，需 `LQIP_FORCE=1` |
 
 ### 7.3 图片路由 `/content-images/[file]`
 

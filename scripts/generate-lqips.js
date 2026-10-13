@@ -68,10 +68,27 @@ function collectMdFiles(dir) {
   return files
 }
 
-async function sampleColors(sharp, input) {
-  const raw = await sharp(input).resize(2, 2, { fit: 'fill' }).removeAlpha().raw().toBuffer()
+async function readImageInfo(sharp, input) {
+  const image = sharp(input)
+  const meta = await image.metadata()
+  const raw = await image.resize(2, 2, { fit: 'fill' }).removeAlpha().raw().toBuffer()
 
-  return raw.toString('hex', 0, 3) + raw.toString('hex', 3, 6) + raw.toString('hex', 9, 12)
+  return {
+    c: raw.toString('hex', 0, 3) + raw.toString('hex', 3, 6) + raw.toString('hex', 9, 12),
+    w: Number(meta.width) || 0,
+    h: Number(meta.height) || 0,
+  }
+}
+
+function isCurrentEntry(value) {
+  return (
+    Boolean(value) &&
+    typeof value === 'object' &&
+    typeof value.c === 'string' &&
+    value.c.length === 18 &&
+    Number.isFinite(value.w) &&
+    Number.isFinite(value.h)
+  )
 }
 
 async function fetchBuffer(url, timeoutMs = 8000) {
@@ -115,14 +132,14 @@ async function main() {
     }
   }
 
-  const pending = [...targets.entries()].filter(([key]) => !(key in existing))
+  const pending = [...targets.entries()].filter(([key]) => !isCurrentEntry(existing[key]))
   if (pending.length > 0) {
     const sharp = requireFromHere('sharp')
     const failed = []
     for (const [key, target] of pending) {
       try {
         const input = target.kind === 'file' ? target.source : await fetchBuffer(target.source)
-        existing[key] = await sampleColors(sharp, input)
+        existing[key] = await readImageInfo(sharp, input)
       } catch (err) {
         failed.push(`${key} (${err?.message ?? err})`)
       }

@@ -415,6 +415,14 @@
 .post-content .img-frame.is-error img {
   display: none;
 }
+.post-content .img-frame.is-sized {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.post-content .img-frame.is-sized:not(.is-loaded):not(.is-error) {
+  min-height: 0;
+}
 @keyframes img-shimmer {
   from {
     background-position: 120% 0;
