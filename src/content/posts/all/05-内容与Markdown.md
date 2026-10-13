@@ -469,7 +469,7 @@ function normalizeLanguage(raw) {
 
 ```html
 <span class="img-frame is-sized" style="--img-lqip:linear-gradient(135deg,#aabbcc 0%,#ddeeff 50%,#112233 100%)">
-  <a class="img-lightbox" href="{src}" title="…">
+  <a class="img-lightbox" href="{src}" title="…" data-pswp-width="512" data-pswp-height="512">
     <img src="{src}" alt="…" width="512" height="512" loading="lazy" decoding="async" />
   </a>
 </span>
@@ -483,6 +483,7 @@ function normalizeLanguage(raw) {
 | `title` 属性 | 存在则同时写到 `<img>` 与 `<a>` |
 | 尺寸已知 | 加 `is-sized` 类并写 `width`/`height`（来自 `.generated/lqips.json`）；`.img-frame.is-sized` 在加载期就用 `width: fit-content` 贴合图片，因此不会先撑满容器再回缩 |
 | 尺寸未知 | 保持 `class="img-frame"`，加载期仍是 `min-height: 8rem` 的 shimmer 骨架（`public/` 图片、外链图片、SVG 等） |
+| 灯箱尺寸 | 尺寸已知时同时给 `<a>` 写 `data-pswp-width`/`data-pswp-height`，PhotoSwipe 打开幻灯片前就能拿到原始尺寸，首次点击的缩放动画即为正确尺寸，不需要等图片 load |
 
 ### 7.2 LQIP（主色渐变占位）
 

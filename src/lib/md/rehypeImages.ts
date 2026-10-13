@@ -86,13 +86,16 @@ function transform(
         const entry = info[finalSrc]
         const sized = Boolean(entry && entry.w > 0 && entry.h > 0)
         const sizeAttrs = sized ? ` width="${entry?.w}" height="${entry?.h}"` : ''
+        const lightboxAttrs = sized
+          ? ` data-pswp-width="${entry?.w}" data-pswp-height="${entry?.h}"`
+          : ''
         const img = `<img src="${escapeAttr(finalSrc)}" alt="${escapeAttr(alt)}"${titleAttr}${sizeAttrs}${loadingAttrs} />`
         const gradient = entry ? lqipGradient(entry.c) : ''
         const styleAttr = gradient ? ` style="--img-lqip:${gradient}"` : ''
         const frameClass = sized ? 'img-frame is-sized' : 'img-frame'
         children[i] = {
           type: 'raw',
-          value: `<span class="${frameClass}"${styleAttr}><a class="img-lightbox" href="${escapeAttr(finalSrc)}"${titleAttr}>${img}</a></span>`,
+          value: `<span class="${frameClass}"${styleAttr}><a class="img-lightbox" href="${escapeAttr(finalSrc)}"${titleAttr}${lightboxAttrs}>${img}</a></span>`,
         }
         continue
       }
