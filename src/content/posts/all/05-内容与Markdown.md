@@ -118,7 +118,8 @@ category: [技术, 前端]
 ### 方式一：脚本（推荐）
 
 ```bash
-pnpm new-post my-first-post
+pnpm new-post my-first-post          # 生成 .md
+pnpm new-post my-mdx-post --mdx      # 生成带 Callout 导入的 .mdx
 ```
 
 生成 `src/content/posts/my-first-post.md`：
@@ -137,11 +138,23 @@ published: 2026-01-01 12:00:00
 从这里开始写作。
 ```
 
+带 `--mdx` 时改为生成 `.mdx`，在 frontmatter 之后多一行 `Callout` 导入与一段示例（导入路径按文件所在目录动态计算，顶层文章是 `../../components/mdx/Callout.astro`）：
+
+```mdx
+import Callout from '../../components/mdx/Callout.astro'
+
+从这里开始写作。
+
+<Callout type="tip" title="提示">
+支持 Markdown 的提示框，type 可取 info / tip / warning / danger。
+</Callout>
+```
+
 | 行为 | 说明 |
 | --- | --- |
-| 参数 | `process.argv[2]`，缺省为 `post-{YYYY-MM-DD}` |
+| 参数 | 首个非 `--` 参数作为 slug，缺省为 `post-{YYYY-MM-DD}`；`--mdx` 生成 `.mdx`，其他 `--*` 参数打印警告后忽略 |
 | 已存在 | 打印 `already exists: <path>` 并 `exit 1`，不覆盖 |
-| 目录 | `mkdirSync(dir, { recursive: true })`，目录不存在会自动创建 |
+| 目录 | `mkdirSync(path.dirname(file), { recursive: true })`，嵌套 slug（如 `all/xx`）也可用 |
 | `slug` | 留空，构建时由 `ensurePostSlugs` 自动填充 |
 | `published` | 取当前 UTC 时间 |
 
