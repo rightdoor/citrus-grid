@@ -7,6 +7,15 @@ const unknownFlags = args.filter((arg) => arg.startsWith('--') && arg !== '--mdx
 const mdx = args.includes('--mdx')
 const slug = args.find((arg) => !arg.startsWith('--')) || `post-${new Date().toISOString().slice(0, 10)}`
 const dir = path.resolve('src/content/posts')
+
+// slug 会直接拼进文件路径：拒绝路径分隔符、绝对路径与 ".."，
+// 防止 pnpm new-post ../../foo 越出 posts 目录或意外创建子目录。
+// 中文等其它字符允许（用作文件名和标题，slug 由 ensure-post-slugs 生成）。
+if (/[\\/\0]/.test(slug) || slug.includes('..') || path.isAbsolute(slug)) {
+  console.error(`invalid slug (path separators, ".." and absolute paths are not allowed): ${slug}`)
+  process.exit(1)
+}
+
 const file = path.join(dir, `${slug}${mdx ? '.mdx' : '.md'}`)
 
 if (unknownFlags.length) {
