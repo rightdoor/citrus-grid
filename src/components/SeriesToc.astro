@@ -64,14 +64,20 @@ const postUrl = (p: Post) => localePath(lang, `/posts/${p.id}`)
 </section>
 
 <script>
-  const seriesToggle = document.getElementById('series-toggle')
-  if (seriesToggle && !seriesToggle.dataset.bound) {
-    seriesToggle.dataset.bound = '1'
-    seriesToggle.addEventListener('click', () => {
-      const root = document.getElementById('series-directory')
-      const open = seriesToggle.getAttribute('aria-expanded') === 'true'
-      seriesToggle.setAttribute('aria-expanded', String(!open))
-      root?.classList.toggle('is-open', !open)
-    })
-  }
+  import { onPageLoad } from '@/lib/pageLifecycle'
+
+  // 组件位于 swup 容器内，换页后 DOM 被替换而模块只会求值一次，
+  // 必须在每次 astro:page-load 时对新 DOM 重新绑定
+  onPageLoad(() => {
+    const seriesToggle = document.getElementById('series-toggle')
+    if (seriesToggle && !seriesToggle.dataset.bound) {
+      seriesToggle.dataset.bound = '1'
+      seriesToggle.addEventListener('click', () => {
+        const root = document.getElementById('series-directory')
+        const open = seriesToggle.getAttribute('aria-expanded') === 'true'
+        seriesToggle.setAttribute('aria-expanded', String(!open))
+        root?.classList.toggle('is-open', !open)
+      })
+    }
+  })
 </script>
