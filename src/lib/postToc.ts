@@ -3,6 +3,9 @@ import { findAnchorTarget, HEADING_SCROLL_OFFSET, smoothScrollToHeading } from '
 const TOC_SNAP_RANGE = 80
 
 let postBody: HTMLElement | null = null
+// 标题集合在一次页面生命周期内不变：initToc 时缓存，
+// 滚动回调（rAF 节流）只做测量，不再每帧 querySelectorAll
+let headingEls: HTMLElement[] = []
 let activeHeading = ''
 let tocModal: HTMLElement | null = null
 let tocCloseTimer: number | undefined
@@ -18,9 +21,9 @@ function tocScrollDelta(list: HTMLElement, active: HTMLElement): number {
 }
 
 function updateActiveToc() {
-  if (!postBody) return
-  const headingEls = Array.from(postBody.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'))
-  if (!headingEls.length) return
+  // isConnected 防护换页窗口期：swup 替换 DOM 后、initToc 刷新缓存前
+  // 触发的滚动事件不应使用已脱离文档的旧标题
+  if (!headingEls.length || !headingEls[0].isConnected) return
   const threshold = HEADING_SCROLL_OFFSET + 16
   let currentByPassed: string | null = null
   let snapId: string | null = null
@@ -60,14 +63,8 @@ function updateActiveToc() {
 }
 
 function scrollTocListToActive(list: HTMLElement, active: HTMLElement) {
-  const listRect = list.getBoundingClientRect()
-  const activeRect = active.getBoundingClientRect()
-  const pad = 12
-  if (activeRect.top < listRect.top + pad) {
-    list.scrollTop += activeRect.top - listRect.top - pad
-  } else if (activeRect.bottom > listRect.bottom - pad) {
-    list.scrollTop += activeRect.bottom - listRect.bottom + pad
-  }
+  const delta = tocScrollDelta(list, active)
+  if (delta) list.scrollTop += delta
 }
 
 function openTocModal() {
@@ -158,6 +155,9 @@ window.addEventListener('resize', () => {
 
 export function initToc() {
   postBody = document.querySelector<HTMLElement>('.post-content')
+  headingEls = postBody
+    ? Array.from(postBody.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'))
+    : []
   activeHeading = ''
   document.querySelectorAll('body > #toc-modal').forEach((el) => {
     el.remove()
