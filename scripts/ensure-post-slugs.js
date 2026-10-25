@@ -85,9 +85,8 @@ function collectHrefs(body) {
     [REF_LINK_RE, 1],
     [RAW_HREF_RE, 2],
   ]) {
-    re.lastIndex = 0
-    let match
-    while ((match = re.exec(body)) !== null) {
+    // 三个正则均带 /g，matchAll 不依赖也不改动 lastIndex
+    for (const match of body.matchAll(re)) {
       const target = match[group]
       if (target) hrefs.add(target)
     }
