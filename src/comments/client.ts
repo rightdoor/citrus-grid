@@ -97,6 +97,12 @@ async function mount(section: HTMLElement) {
   const stopWatching = watchContent(container, () => section.classList.add('is-loaded'))
 
   const adapter = await loadAdapter(name)
+  // 等待期间发生 swup 换页：当前节点已脱离文档，放弃挂载，
+  // 否则会把评论挂进已销毁的旧 DOM，并污染下一页的 currentAdapter 状态
+  if (!section.isConnected) {
+    stopWatching()
+    return
+  }
   if (!adapter) {
     stopWatching()
     section.classList.add('is-error')
@@ -106,6 +112,12 @@ async function mount(section: HTMLElement) {
 
   try {
     await adapter.mountComment(container)
+    // 挂载期间发生换页：对已脱离文档的容器做一次清理，
+    // 避免 utterances 的脚本、twikoo 的渲染残留在死节点里
+    if (!section.isConnected) {
+      adapter.unmountComment?.()
+      currentAdapter = null
+    }
   } catch (err) {
     stopWatching()
     currentAdapter = null
