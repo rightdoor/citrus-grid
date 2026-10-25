@@ -153,6 +153,7 @@ import Callout from '../../components/mdx/Callout.astro'
 | 行为 | 说明 |
 | --- | --- |
 | 参数 | 首个非 `--` 参数作为 slug，缺省为 `post-{YYYY-MM-DD}`；`--mdx` 生成 `.mdx`，其他 `--*` 参数打印警告后忽略 |
+| 越界校验 | slug 解析后的文件路径必须仍留在 `src/content/posts` 内，`../../foo` 与绝对路径打印 `invalid slug` 并 `exit 1` |
 | 已存在 | 打印 `already exists: <path>` 并 `exit 1`，不覆盖 |
 | 目录 | `mkdirSync(path.dirname(file), { recursive: true })`，嵌套 slug（如 `all/xx`）也可用 |
 | `slug` | 留空，构建时由 `ensurePostSlugs` 自动填充 |
@@ -306,7 +307,7 @@ details 是唯一可折叠的容器，标题变成 `<summary>`。
 | 开启标记 | 行首 `:::类型` + 可选标题（正则 `^:::([a-zA-Z]+)[ \t]*(.*)$`） |
 | 合法类型白名单 | `CONTAINER_TYPES = new Set(['info','tip','warning','danger','details'])` |
 | 结束标记 | 单独一行 `:::` |
-| 未闭合 | 不报错，降级：内容按普通段落展开，不生成容器 |
+| 未闭合 | 不报错，降级：内容按普通段落展开，`:::opener` 行也按普通文本保留（与类型不在白名单的行为一致，作者能直接看到问题），不生成容器 |
 | 类型不在白名单 | 视为普通段落，保留原样文本 |
 | 标题缺省 | 显示类型名（`title \|\| type`） |
 | 连续行合并 | `mergeLineRuns()` 把相邻行用 `<br>` 连接成一个段落，块级节点（列表、代码块）原样保留 |
