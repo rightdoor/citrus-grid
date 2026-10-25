@@ -11,6 +11,12 @@ export function initImageFrames() {
         frame.classList.add('is-loaded')
         return
       }
+      // 已加载失败且来自缓存：load/error 都不会再触发，直接标记错误，
+      // 否则 frame 永远停在中间态
+      if (img.complete && img.naturalWidth === 0) {
+        frame.classList.add('is-error')
+        return
+      }
       img.addEventListener('load', () => frame.classList.add('is-loaded'), { once: true })
       img.addEventListener('error', () => frame.classList.add('is-error'), { once: true })
     })
@@ -31,13 +37,12 @@ export function initReadingReveal() {
   const io = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        // 一次性 reveal：只播放一次淡入，不因滚出视口而重新隐藏，
+        // 否则来回滚动时已读内容会反复闪烁
         const t = entry.target as HTMLElement
-        if (entry.isIntersecting) {
-          t.classList.add('reveal-in')
-        } else {
-          t.style.transitionDelay = ''
-          t.classList.remove('reveal-in')
-        }
+        t.classList.add('reveal-in')
+        io.unobserve(t)
       }
     },
     { rootMargin: '0px 0px -4% 0px', threshold: 0.01 },
