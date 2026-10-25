@@ -38,7 +38,8 @@ export function useTranslations(lang: Lang) {
     let text = typeof value === 'string' ? value : key
     if (params) {
       for (const [k, v] of Object.entries(params)) {
-        text = text.replaceAll(`{${k}}`, String(v))
+        // 函数式替换：字符串 replacement 中 $&、$' 等序列会被特殊展开
+        text = text.replaceAll(`{${k}}`, () => String(v))
       }
     }
     return text
