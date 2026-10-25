@@ -363,12 +363,30 @@ async function extractFlac(head: HeadResult, url: string): Promise<ExtractedCove
 
 const cache = new Map<string, Promise<ExtractedCover | null>>()
 
+// 撤销延迟：切曲后给界面换图留出余量，避免撤销仍被 <img> 引用的 URL
+const REVOKE_DELAY_MS = 60_000
+
 export function extractAudioCover(src: string): Promise<ExtractedCover | null> {
   const hit = cache.get(src)
   if (hit) return hit
   const p = doExtract(src)
   cache.set(src, p)
   return p
+}
+
+// 曲目切换后回收旧封面的 blob URL：撤销是延迟执行的，同时移除缓存条目，
+// 切回该曲目会重新提取（代价是一次元数据请求）；
+// 不撤销的话会话内切换曲目会累积持有整张封面图
+export function revokeAudioCover(src: string) {
+  const hit = cache.get(src)
+  if (!hit) return
+  cache.delete(src)
+  hit
+    .then((cover) => {
+      if (!cover) return
+      window.setTimeout(() => URL.revokeObjectURL(cover.blobUrl), REVOKE_DELAY_MS)
+    })
+    .catch(() => {})
 }
 
 async function doExtract(src: string): Promise<ExtractedCover | null> {
