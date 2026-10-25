@@ -47,9 +47,13 @@ function collectMdFiles(dir) {
 
 function parseFrontmatter(raw) {
   const fm = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? ''
+  // 先原样取出 slug 值，合规性单独判断：
+  // 「没写 slug」与「写了但不合规」必须区分，后者不能静默改写
+  const slugValue = fm.match(/^slug:\s*['"]?(.+?)['"]?\s*$/m)?.[1]
   return {
     title: fm.match(/^title:\s*['"]?(.+?)['"]?\s*$/m)?.[1] ?? '',
-    slug: fm.match(/^slug:\s*['"]?([a-z0-9-]+)['"]?\s*$/m)?.[1],
+    slug: slugValue && /^[a-z0-9-]+$/.test(slugValue) ? slugValue : undefined,
+    rawSlug: slugValue,
     draft: /^draft:\s*true\s*$/m.test(fm),
   }
 }
@@ -132,6 +136,7 @@ export function ensurePostSlugs() {
           raw,
           title: fm.title,
           slug: fm.slug,
+          rawSlug: fm.rawSlug,
           draft: fm.draft,
         })
         if (fm.slug) used.add(fm.slug)
@@ -139,6 +144,16 @@ export function ensurePostSlugs() {
 
       for (const rec of records) {
         if (rec.slug) continue
+        if (rec.rawSlug) {
+          // 用户已写 slug 但不合规（如 My-Post、hello_world）：
+          // 保留原值供索引用，改写与否交给 content.config 的 schema 报错，
+          // 静默替换会破坏用户自定义的链接地址
+          console.warn(
+            `[post-slug] ${rec.rel}: slug "${rec.rawSlug}" 不合规范，保留原值不做改写（schema 校验会报错）`,
+          )
+          rec.slug = rec.rawSlug
+          continue
+        }
         const base = titleToSlug(rec.title)
         let slug = base
         for (let n = 1; used.has(slug); n += 1) slug = `${base}-${n}`
