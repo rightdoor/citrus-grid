@@ -90,7 +90,11 @@ function syncPostUpdated(full, rel, log = false) {
     body = lines.join(eol)
   }
   // 用函数式替换：body 中的 $&、$1 等序列在字符串替换里会被特殊展开而写坏文件
-  writeFileSync(full, raw.replace(fm[0], () => `---${eol}${body}${eol}---`), 'utf-8')
+  writeFileSync(
+    full,
+    raw.replace(fm[0], () => `---${eol}${body}${eol}---`),
+    'utf-8',
+  )
   state[rel] = { mtime: Math.round(statSync(full).mtimeMs), stamp }
   if (log) console.log(`[post-updated] ${rel} -> ${stamp}`)
   return true

@@ -5,7 +5,8 @@ import process from 'node:process'
 const args = process.argv.slice(2)
 const unknownFlags = args.filter((arg) => arg.startsWith('--') && arg !== '--mdx')
 const mdx = args.includes('--mdx')
-const slug = args.find((arg) => !arg.startsWith('--')) || `post-${new Date().toISOString().slice(0, 10)}`
+const slug =
+  args.find((arg) => !arg.startsWith('--')) || `post-${new Date().toISOString().slice(0, 10)}`
 const dir = path.resolve('src/content/posts')
 
 // slug 会直接拼进文件路径：拒绝路径分隔符、绝对路径与 ".."，
