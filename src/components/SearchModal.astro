@@ -14,6 +14,9 @@ const t = useTranslations(lang)
 <div
   id="search-modal"
   class="wp-overlay fixed inset-0 z-[1500] hidden items-center justify-center bg-black/40 p-4"
+  role="dialog"
+  aria-modal="true"
+  aria-label={t('search.title')}
   data-more-hits={t('search.moreHits')}
 >
   <div class="wp-modal-panel flex max-h-[85vh] w-full flex-col rounded-[8px] border border-line-light bg-surface shadow-card" style="max-width: 520px">
@@ -46,6 +49,8 @@ const t = useTranslations(lang)
 </div>
 
 <script>
+  import { trapFocus, type FocusTrap } from '@/lib/focusTrap'
+
   const modal = document.getElementById('search-modal')!
   const input = document.getElementById('search-input') as HTMLInputElement
   const resultsEl = document.getElementById('search-results')!
@@ -59,6 +64,7 @@ const t = useTranslations(lang)
   let searchSeq = 0
   let closeTimer: number | undefined
   let searchDebounce: number | undefined
+  let activeTrap: FocusTrap | null = null
 
   function escapeHtml(value: string) {
     return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -159,6 +165,7 @@ const t = useTranslations(lang)
     input.value = ''
     failedEl.classList.add('hidden')
     updateChrome()
+    activeTrap = trapFocus(modal)
     input.focus()
     loadPagefind()
   }
@@ -167,6 +174,8 @@ const t = useTranslations(lang)
     if (modal.classList.contains('hidden')) return
     window.clearTimeout(closeTimer)
     window.clearTimeout(searchDebounce)
+    activeTrap?.release()
+    activeTrap = null
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const done = () => {
       modal.classList.add('hidden')

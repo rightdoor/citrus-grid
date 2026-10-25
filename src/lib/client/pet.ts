@@ -1,3 +1,5 @@
+import { rememberFocus } from '@/lib/focusTrap'
+
 const FACE_SIZE = 224
 
 const MAX_X = 14
@@ -307,6 +309,7 @@ export function initPet() {
   let pressFrom: { x: number; y: number } | null = null
   let alertTimer = 0
   let cardCloseTimer = 0
+  let restoreCardFocus: () => void = () => {}
 
   function compute() {
     if (!active) {
@@ -387,6 +390,7 @@ export function initPet() {
     if (!cardOpen || !card) return
     cardOpen = false
     petEl.classList.remove('is-alert')
+    restoreCardFocus()
     const finish = () => {
       card.hidden = true
       card.classList.remove('is-closing')
@@ -408,6 +412,10 @@ export function initPet() {
     card.classList.remove('is-closing')
     card.classList.add('is-open')
     petEl.classList.add('is-alert')
+    // 卡片仅长按/触摸可唤出，键盘用户无法触达：打开时移焦到确认按钮，
+    // 使其可用 Enter 确认关闭，关闭时归还焦点
+    restoreCardFocus = rememberFocus()
+    card.querySelector<HTMLElement>('[data-pet-dismiss]')?.focus({ preventScroll: true })
     window.clearTimeout(alertTimer)
     alertTimer = window.setTimeout(() => petEl.classList.remove('is-alert'), ALERT_MS)
     wake()

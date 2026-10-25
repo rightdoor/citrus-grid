@@ -330,7 +330,13 @@ const postYear = post.data.published.getUTCFullYear()
 
   {
     hasToc && (
-      <div id="toc-modal" class="wp-overlay fixed inset-0 z-[1500] hidden items-center justify-center bg-black/40 p-4">
+      <div
+        id="toc-modal"
+        class="wp-overlay fixed inset-0 z-[1500] hidden items-center justify-center bg-black/40 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('post.toc')}
+      >
         <div class="wp-modal-panel flex max-h-[85vh] w-full flex-col rounded-[8px] border border-line-light bg-surface shadow-card" style="max-width: 520px">
           <div class="flex items-center justify-between border-b border-line-light px-5 py-3.5">
             <h3 class="font-bold text-ink">{t('post.toc')}</h3>
