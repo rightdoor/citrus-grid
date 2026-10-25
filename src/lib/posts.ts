@@ -61,11 +61,6 @@ export function totalWords(posts: Post[]): number {
   return posts.reduce((sum, p) => sum + wordCount(p), 0)
 }
 
-// 全站阅读时长
-export function totalMinutes(posts: Post[]): number {
-  return posts.reduce((sum, p) => sum + readMinutes(p), 0)
-}
-
 // 分类（默认按数量降序）
 export function groupByCategory(posts: Post[]): NameCount[] {
   const map = new Map<string, number>()
