@@ -58,6 +58,7 @@ const t = useTranslations(lang)
   let pagefind: any = null
   let searchSeq = 0
   let closeTimer: number | undefined
+  let searchDebounce: number | undefined
 
   function escapeHtml(value: string) {
     return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -151,6 +152,7 @@ const t = useTranslations(lang)
 
   function open() {
     window.clearTimeout(closeTimer)
+    window.clearTimeout(searchDebounce)
     modal.classList.remove('wp-closing')
     modal.classList.remove('hidden')
     modal.classList.add('flex')
@@ -164,6 +166,7 @@ const t = useTranslations(lang)
   function close(animated = true) {
     if (modal.classList.contains('hidden')) return
     window.clearTimeout(closeTimer)
+    window.clearTimeout(searchDebounce)
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const done = () => {
       modal.classList.add('hidden')
@@ -212,9 +215,14 @@ const t = useTranslations(lang)
   modal.addEventListener('click', (e) => {
     if (e.target === modal) close()
   })
-  input.addEventListener('input', runSearch)
+  // 输入防抖：searchSeq 只防过期渲染，不防频度；每个按键都全量搜索浪费明显
+  input.addEventListener('input', () => {
+    window.clearTimeout(searchDebounce)
+    searchDebounce = window.setTimeout(runSearch, 150)
+  })
   clearBtn.addEventListener('click', () => {
     input.value = ''
+    window.clearTimeout(searchDebounce)
     runSearch()
     input.focus()
   })
