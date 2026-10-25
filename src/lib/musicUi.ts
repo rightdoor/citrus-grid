@@ -501,18 +501,22 @@ export function bindAudioEvents(
 
 export function bindProgressDrag(el: HTMLElement, onSeek: (ratio: number) => void): () => boolean {
   const drag = { active: false }
-  const ratioFrom = (clientX: number) => {
+  const ratioFrom = (clientX: number): number | null => {
     const rect = el.getBoundingClientRect()
+    if (rect.width <= 0) return null
     return clampRatio((clientX - rect.left) / rect.width)
   }
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault()
     drag.active = true
     el.setPointerCapture(e.pointerId)
-    onSeek(ratioFrom(e.clientX))
+    const r = ratioFrom(e.clientX)
+    if (r !== null) onSeek(r)
   })
   el.addEventListener('pointermove', (e) => {
-    if (drag.active) onSeek(ratioFrom(e.clientX))
+    if (!drag.active) return
+    const r = ratioFrom(e.clientX)
+    if (r !== null) onSeek(r)
   })
   const end = () => {
     drag.active = false

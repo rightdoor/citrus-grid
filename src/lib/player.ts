@@ -40,6 +40,7 @@ export function formatTime(s: number): string {
 }
 
 export function clampRatio(v: number): number {
+  if (!Number.isFinite(v)) return 0
   return Math.min(1, Math.max(0, v))
 }
 
@@ -92,6 +93,13 @@ export function createPlayer(tracks: PlayerTrack[], media: MediaPort, events: Pl
     notify()
   }
 
+  function setVolume(v: number) {
+    state.volume = clampRatio(v)
+    if (state.volume > 0) lastVolume = state.volume
+    media.setVolume(state.volume)
+    notify()
+  }
+
   return {
     state,
     tracks,
@@ -138,14 +146,10 @@ export function createPlayer(tracks: PlayerTrack[], media: MediaPort, events: Pl
       }
       return null
     },
-    setVolume(v: number) {
-      state.volume = clampRatio(v)
-      if (state.volume > 0) lastVolume = state.volume
-      media.setVolume(state.volume)
-      notify()
-    },
+    setVolume,
+    // 走闭包而非 this：与返回对象的其余方法风格一致，被解构调用也不会断掉接收者
     toggleMute() {
-      this.setVolume(state.volume === 0 ? (lastVolume > 0 ? lastVolume : 0.5) : 0)
+      setVolume(state.volume === 0 ? (lastVolume > 0 ? lastVolume : 0.5) : 0)
     },
     cycleMode() {
       state.playMode = nextMode(state.playMode)
