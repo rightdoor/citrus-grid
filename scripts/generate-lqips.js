@@ -125,7 +125,13 @@ async function main() {
           targets.set(src, { kind: 'url', source: src })
         continue
       }
-      const localPath = path.resolve(path.dirname(mdFile), decodeURIComponent(src))
+      // 非法百分号编码（如文件名含裸 %）时按原文处理，与 contentImages.safeDecode 一致，
+      // 不能让单个坏文件名使整批 LQIP 失效
+      let decoded = src
+      try {
+        decoded = decodeURIComponent(src)
+      } catch {}
+      const localPath = path.resolve(path.dirname(mdFile), decoded)
       const key = contentImageKey(localPath)
       if (key && existsSync(localPath) && !targets.has(key))
         targets.set(key, { kind: 'file', source: localPath })
