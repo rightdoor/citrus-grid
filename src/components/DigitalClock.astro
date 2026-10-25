@@ -81,6 +81,8 @@ const clockSlots = ['h1', 'h2', ':', 'm1', 'm2', ':', 's1', 's2']
     let lastText = ''
     let lastTz = ''
     const painted: string[] = []
+    // 名片位于 swup 容器外，元素身份稳定；非首页时整块被 hidden
+    const profileRoot = document.getElementById('profile-card-root')
 
     const paintDigit = (el: HTMLElement, ch: string) => {
       const on = DIGIT_SEGS[ch] ?? ''
@@ -100,22 +102,26 @@ const clockSlots = ['h1', 'h2', ':', 'm1', 'm2', ':', 's1', 's2']
 
     const tick = () => {
       window.clearTimeout(timer)
-      const now = new Date()
-      const text = `${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`
-      if (text !== lastText) {
-        lastText = text
-        for (let i = 0; i < digits.length; i++) {
-          if (painted[i] !== text[i]) {
-            painted[i] = text[i]
-            paintDigit(digits[i], text[i])
+      // 名片被隐藏（非首页）或页面不可见时跳过绘制，只保留自排程；
+      // 恢复可见后的第一次 tick 会因文本差异重绘，无需额外唤醒逻辑
+      if (!document.hidden && !(profileRoot?.hidden ?? false)) {
+        const now = new Date()
+        const text = `${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`
+        if (text !== lastText) {
+          lastText = text
+          for (let i = 0; i < digits.length; i++) {
+            if (painted[i] !== text[i]) {
+              painted[i] = text[i]
+              paintDigit(digits[i], text[i])
+            }
           }
-        }
-        const date = dateFmt.format(now)
-        if (dateEl.textContent !== date) dateEl.textContent = date
-        const tz = tzLabel(now)
-        if (tz !== lastTz) {
-          lastTz = tz
-          tzEl.textContent = tz
+          const date = dateFmt.format(now)
+          if (dateEl.textContent !== date) dateEl.textContent = date
+          const tz = tzLabel(now)
+          if (tz !== lastTz) {
+            lastTz = tz
+            tzEl.textContent = tz
+          }
         }
       }
       timer = window.setTimeout(tick, 1000 - (Date.now() % 1000) + 20)
