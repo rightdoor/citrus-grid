@@ -40,7 +40,8 @@ const ogImageURL = new URL(seoImage || siteConfig.logo, Astro.site)
 
 const isHomePage = (() => {
   const p = Astro.url.pathname.replace(/\/+$/, '') || '/'
-  return p === '/' || /^\/\d+$/.test(p)
+  // /404 会命中纯数字分页正则，但它不是分页页，不能显示个人名片
+  return p !== '/404' && (p === '/' || /^\/\d+$/.test(p))
 })()
 
 const ogLocale = ({ zh: 'zh_CN', ja: 'ja_JP', en: 'en_US' } as const)[lang]
