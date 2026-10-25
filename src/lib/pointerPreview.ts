@@ -138,19 +138,62 @@ export function attachPointerPreview(source: HTMLElement, options: PointerPrevie
     render()
   }
 
+  const onThemeChange = () => {
+    if (!active) return
+    sync()
+    render()
+  }
+
+  const onResync = () => {
+    if (active) sync()
+  }
+
   build()
   source.addEventListener('pointermove', move, { passive: true })
   source.addEventListener('pointerleave', leave)
   window.addEventListener('scroll', refresh, { passive: true })
   window.addEventListener('resize', refresh)
-  document.addEventListener('theme-change', () => {
-    if (!active) return
-    sync()
-    render()
-  })
+  document.addEventListener('theme-change', onThemeChange)
   for (const name of resyncEvents ?? []) {
-    source.addEventListener(name, () => {
-      if (active) sync()
-    })
+    source.addEventListener(name, onResync)
   }
+
+  // 解绑全部监听器并释放定时器/动画帧，供 swup 换页等场景回收旧卡片引用
+  const dispose = () => {
+    source.removeEventListener('pointermove', move)
+    source.removeEventListener('pointerleave', leave)
+    window.removeEventListener('scroll', refresh)
+    window.removeEventListener('resize', refresh)
+    document.removeEventListener('theme-change', onThemeChange)
+    for (const name of resyncEvents ?? []) {
+      source.removeEventListener(name, onResync)
+    }
+    window.clearInterval(syncTimer)
+    if (frame) window.cancelAnimationFrame(frame)
+    reset()
+    disposers.delete(entry)
+  }
+
+  const entry = { source, dispose }
+  disposers.add(entry)
+  return dispose
 }
+
+// 卡片随 swup 换页被替换，但挂到 window/document 上的监听器闭包会持有
+// 整棵脱离文档的 DOM 子树；换页开始时回收 swup 容器内的实例。
+// 容器外的持久元素（如 ProfileCard）不在被替换之列，予以保留。
+const disposers = new Set<{ source: HTMLElement; dispose: () => void }>()
+let swapCleanupBound = false
+
+function bindSwapCleanup() {
+  if (swapCleanupBound) return
+  swapCleanupBound = true
+  document.addEventListener('astro:before-swap', () => {
+    const container = document.getElementById('swup-container')
+    if (!container) return
+    for (const entry of [...disposers]) {
+      if (container.contains(entry.source)) entry.dispose()
+    }
+  })
+}
+bindSwapCleanup()
