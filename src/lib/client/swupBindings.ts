@@ -102,7 +102,12 @@ export function bindCrossPageAnchors() {
     const pending = swupWindow().__pendingScrollHash
     if (!pending) return
     swupWindow().__pendingScrollHash = null
-    history.replaceState(history.state, '', `${window.location.pathname}#${pending}`)
+    // replaceState 需带上 search，否则跨页锚点跳转会把原 query 丢掉
+    history.replaceState(
+      history.state,
+      '',
+      `${window.location.pathname}${window.location.search}#${pending}`,
+    )
     window.setTimeout(() => smoothScrollToHeadingAnchor(pending), 120)
   }
   onPageLoad(consumePendingScrollHash)
@@ -110,6 +115,7 @@ export function bindCrossPageAnchors() {
   document.addEventListener('click', (e) => {
     const link = (e.target as HTMLElement)?.closest<HTMLAnchorElement>('a')
     if (!link || link.hasAttribute('data-no-swup')) return
+    if (link.target === '_blank' || link.hasAttribute('download')) return
     const raw = link.getAttribute('href') || ''
     let url: URL
     try {
