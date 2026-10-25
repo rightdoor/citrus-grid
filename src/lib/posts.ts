@@ -49,8 +49,11 @@ export function excerptOf(post: Post): string {
   const stripped = (post.body ?? '')
     .replace(/<[^>]+>/g, '')
     .replace(/[#*`>]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
-  return stripped.length > 120 ? `${stripped.slice(0, 120)}...` : stripped
+  // 按 Unicode 码点截断，避免切在 emoji 等代理对中间产生乱码
+  const chars = [...stripped]
+  return chars.length > 120 ? `${chars.slice(0, 120).join('')}...` : stripped
 }
 
 // 全站字数
