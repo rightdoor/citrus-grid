@@ -116,12 +116,14 @@ draft: false
 | --- | --- |
 | `pnpm dev` / `start` | 開発サーバーを起動します |
 | `pnpm build` | 本番ビルドを実行し、その後 `modulepreload` を自動注入し、インラインスクリプトを圧縮し、`pagefind` を実行してサイト内検索インデックスを生成します |
+| `pnpm build:fresh` | Astro のキャッシュ（`.astro`、`node_modules/.astro`、`node_modules/.cache/jiti`）を削除してからビルドします。markdown プラグインを変更してもページに反映されない場合に使用します |
 | `pnpm preview` | `dist` ビルド成果物をプレビューします |
 | `pnpm check` | Astro の型チェック（`astro check`）を実行します |
 | `pnpm type-check` | TypeScript の型チェック（`tsc --noEmit`、`src` と `scripts` を対象） |
 | `pnpm check-i18n` | zh / ja / en の言語パックのキー集合が一致するか検証します |
 | `pnpm check-swup-ignore` | `shouldIgnoreSwup` 内のインライン正規表現が `ASSET_EXT_RE` / `RESERVED_PATH_RE` 定数と一致するか検証します |
-| `pnpm new-post [slug]` | 新しい記事テンプレート `src/content/posts/<slug>.md` を作成します（slug を省略すると当日の日付で命名） |
+| `pnpm verify` | `astro check`、`tsc --noEmit`、`check-i18n`、`check-swup-ignore` を順に実行し、いずれかが失敗した時点で中断します |
+| `pnpm new-post [slug] [--mdx]` | 新しい記事テンプレート `src/content/posts/<slug>.md` を作成します（`--mdx` を付けると Callout の import を含む `.mdx` テンプレートを生成。slug を省略すると当日の日付で命名） |
 | `pnpm format-post-meta` | 全記事の frontmatter フィールドの順序を一括で整列します |
 | `pnpm format` | Biome を使用して `src` をフォーマットします |
 | `pnpm format:all` | Biome を使用してプロジェクト全体（src、scripts、ルート設定ファイル）をチェックし修正します |
@@ -194,7 +196,7 @@ pnpm type-check
 | [03-主题与样式定制.md](../src/content/posts/all/03-主题与样式定制.md) | `--wp-*` 変数の一覧、ダークモード、配色変更の手順 |
 | [04-站点配置.md](../src/content/posts/all/04-站点配置.md) | `site.config.ts` ほか 5 つの設定ファイルのパラメータ一覧 |
 | [05-内容与Markdown.md](../src/content/posts/all/05-内容与Markdown.md) | Frontmatter 一覧、Markdown プラグイン構成、画像と相対リンク |
-| [06-构建与脚本.md](../src/content/posts/all/06-构建与脚本.md) | 6 つのビルドスクリプト、出力構成、デプロイ |
+| [06-构建与脚本.md](../src/content/posts/all/06-构建与脚本.md) | 7 つのビルドスクリプト、出力構成、デプロイ |
 | [07-页面与路由.md](../src/content/posts/all/07-页面与路由.md) | ルート一覧、SEO、i18n の現状と拡張方法 |
 | [08-插件系统.md](../src/content/posts/all/08-插件系统.md) | コメント／統計プラグインの契約、音楽プレイヤー |
 | [09-常见改造与排错.md](../src/content/posts/all/09-常见改造与排错.md) | 目的別の改造レシピ、FAQ、チェックリスト |

@@ -14,8 +14,8 @@ published: 2026-09-16 19:08:29
 
 | 项 | 约定 |
 | --- | --- |
-| 存放位置 | `src/content/posts/**/*.md`（支持子目录，loader 的 `pattern: '**/*.md'`） |
-| 文件格式 | 仅 `.md`（不支持 `.mdx`，未来计划） |
+| 存放位置 | `src/content/posts/**/*.{md,mdx}`（支持子目录，loader 的 `pattern: '**/*.{md,mdx}'`） |
+| 文件格式 | `.md` 与 `.mdx`（MDX 额外支持表达式、JSX 与组件导入，见 4.1） |
 | URL 来源 | frontmatter 的 `slug`（最终成为 `post.id`），与文件名无关 |
 | 图片位置 | 任意位置，只要在 `src/content/` 下即可（通过 `/content-images/{hash}.ext` 路由访问） |
 | 派生数据 | `.generated/post-index.json`（由构建脚本生成，不要手改） |
@@ -62,7 +62,7 @@ draft: false
 | `series` | `string` | 否 | 无（不填=不连载） | 系列名。同一主题 ≥3 篇、需按顺序阅读时填写；零散文章不填 | `z.string().trim().optional()`，空串视为无系列 |
 | `series_order` | `number` | 否 | — | 系列内阅读顺序（从 1 开始），仅配合 `series` 使用 | `int().min(1)`；缺省按发布时间升序兜底排序 |
 
-> 系列使用规则：系列是与分类/标签互不影响的**可选**属性。判定标准——同一主题已有 **3 篇以上**且**需按顺序阅读**（如连载教程）才建系列，零散文章不填。有 `series` 的文章会出现在 `/series/` 系列页与独立的系列总览页；文章页会显示系列信息（头部一行 + 可折叠的系列目录），底部上一篇/下一篇在系列内按 `series_order` 相邻衔接。系列内排序规则：`series_order` 升序 → 发布时间升序兜底。
+> 系列使用规则：系列是与分类/标签互不影响的可选属性。判定标准——同一主题已有 3 篇以上且需按顺序阅读（如连载教程）才建系列，零散文章不填。有 `series` 的文章会出现在 `/series/` 系列页与独立的系列总览页；文章页会显示系列信息（头部一行 + 可折叠的系列目录），底部上一篇/下一篇在系列内按 `series_order` 相邻衔接。系列内排序规则：`series_order` 升序 → 发布时间升序兜底。
 
 ### 2.1 `normalizeList()` 的确切行为
 
@@ -118,7 +118,8 @@ category: [技术, 前端]
 ### 方式一：脚本（推荐）
 
 ```bash
-pnpm new-post my-first-post
+pnpm new-post my-first-post          # 生成 .md
+pnpm new-post my-mdx-post --mdx      # 生成带 Callout 导入的 .mdx
 ```
 
 生成 `src/content/posts/my-first-post.md`：
@@ -137,11 +138,24 @@ published: 2026-01-01 12:00:00
 从这里开始写作。
 ```
 
+带 `--mdx` 时改为生成 `.mdx`，在 frontmatter 之后多一行 `Callout` 导入与一段示例（导入路径按文件所在目录动态计算，顶层文章是 `../../components/mdx/Callout.astro`）：
+
+```mdx
+import Callout from '../../components/mdx/Callout.astro'
+
+从这里开始写作。
+
+<Callout type="tip" title="提示">
+支持 Markdown 的提示框，type 可取 info / tip / warning / danger。
+</Callout>
+```
+
 | 行为 | 说明 |
 | --- | --- |
-| 参数 | `process.argv[2]`，缺省为 `post-{YYYY-MM-DD}` |
+| 参数 | 首个非 `--` 参数作为 slug，缺省为 `post-{YYYY-MM-DD}`；`--mdx` 生成 `.mdx`，其他 `--*` 参数打印警告后忽略 |
+| 越界校验 | slug 解析后的文件路径必须仍留在 `src/content/posts` 内，`../../foo` 与绝对路径打印 `invalid slug` 并 `exit 1` |
 | 已存在 | 打印 `already exists: <path>` 并 `exit 1`，不覆盖 |
-| 目录 | `mkdirSync(dir, { recursive: true })`，目录不存在会自动创建 |
+| 目录 | `mkdirSync(path.dirname(file), { recursive: true })`，嵌套 slug（如 `all/xx`）也可用 |
 | `slug` | 留空，构建时由 `ensurePostSlugs` 自动填充 |
 | `published` | 取当前 UTC 时间 |
 
@@ -160,7 +174,7 @@ src/content/posts/
     └── 2026-01.md
 ```
 
-loader 的 `pattern: '**/*.md'` 会递归扫描。相对链接的解析也支持跨目录（见#8）。
+loader 的 `pattern: '**/*.{md,mdx}'` 会递归扫描。相对链接的解析也支持跨目录（见#8）。
 
 ## 4. Markdown 语法支持矩阵
 
@@ -173,7 +187,7 @@ loader 的 `pattern: '**/*.md'` 会递归扫描。相对链接的解析也支持
 | 任务列表 | ✅ | GFM | `accent-color: var(--wp-accent)` |
 | 表格 | ✅ | GFM + `rehypeTableWrap` | 外包 `.table-wrapper` 支持横向滚动；首列 `white-space: nowrap` |
 | 链接 | ✅ | 原生 + `rehypeExternalLinks` | 站外链接自动 `target="_blank"`（按 host 判断，同 host 不加） |
-| 图片 | ✅ | `rehypeImages` | 包 `.img-frame` + `a.img-lightbox`；首图 eager，其余 lazy；注入 LQIP 渐变 |
+| 图片 | ✅ | `rehypeImages` | 包 `.img-frame` + `a.img-lightbox`；首图 eager，其余 lazy；注入 LQIP 渐变与 `width`/`height`（防布局位移） |
 | 引用块 `>` | ✅ | 原生 | 左侧 3px 主题色边框 + 4% 主题色底 |
 | 行内代码 / 代码块 | ✅ | `rehypeCodeBlock`（Prism） | 带语言图标、行号、复制按钮；19 个 Prism 语法组件 |
 | 水平线 | ✅ | 原生 | `---` / `***` / `___` |
@@ -181,9 +195,9 @@ loader 的 `pattern: '**/*.md'` 会递归扫描。相对链接的解析也支持
 | 数学公式 | ✅ | `remarkMath` + `rehypeKatex` | 行内 `$…$`、块级 `$$…$$`；KaTeX 的 CSS 按需加载（见下） |
 | Emoji 短代码 | ✅ | `remarkEmoji` | `:smile:` → 😄 |
 | 自动链接 | ✅ | GFM | `<https://…>`、`www.example.com` |
-| 内联 HTML | ✅ 页面 / ❌ RSS | 由 Astro 的 markdown 处理器保留 raw 节点 | 页面正常输出原生标签；RSS 会被 XML 转义，见下方警告 |
+| 内联 HTML | ✅ 页面 / ✅ RSS | 由 Astro 的 markdown 处理器保留 raw 节点 | 页面输出原生标签；RSS 的 `content:encoded` 用 CDATA 包裹，见下方说明 |
 | 提示容器 | ✅ | `remarkContainers`（自定义） | `:::info` / `tip` / `warning` / `danger` / `details` |
-| MDX / 组件嵌入 | ❌ | — | 见 `AboutPage` 的「未来计划」 |
+| MDX / 组件嵌入 | ✅（`.mdx`） | `@astrojs/mdx` | 表达式、JSX、`import` 组件，与 `.md` 共用同一套插件链，见 4.1 |
 | 缩进式代码块（4 空格） | ❌ | — | 见下方说明 |
 
 > 数学公式的 CSS 按需加载
@@ -204,19 +218,17 @@ loader 的 `pattern: '**/*.md'` 会递归扫描。相对链接的解析也支持
 >
 > 自查方式：DevTools → Network 过滤 `katex`；或 `performance.getEntriesByType('resource')` 里搜索 `katex`。
 
-> 内联 HTML 可用，但 RSS 里会被 XML 转义
+> 内联 HTML：页面与 RSS 都以原生标签输出
 
 页面渲染：✅ 正常。 已实测 `dist/posts/markdown-yu-fa-yang-li/index.html` 中 `<kbd>Ctrl</kbd>`、`<span style="color:red;">红色文字</span>` 都是以原生标签输出的（Astro 的 markdown 处理器内部开启了 `allowDangerousHtml` 并把 raw 节点保留到最终 HTML）。
 
-RSS：⚠️ HTML 会被转义。 `<content:encoded>` 里输出的是 `&lt;p&gt;&lt;kbd&gt;Ctrl&lt;/kbd&gt;…`。这是 `@astrojs/rss` 对 `content` 字段做 XML 转义的既定行为（已用最小用例实测确认，与 `renderMarkdownHtml` 无关——后者本身输出的仍是原生 HTML）。
+RSS：✅ 已改为 CDATA 包裹。 早期版本里 `<content:encoded>` 输出的是 `&lt;p&gt;&lt;kbd&gt;Ctrl&lt;/kbd&gt;…`，原因是 `@astrojs/rss` 会对 `content` 字段做 XML 转义且没有关闭开关（与 `renderMarkdownHtml` 无关——后者本身输出的仍是原生 HTML）。现在 `src/pages/rss.xml.ts` 不再走 `@astrojs/rss`，而是自己拼整份 XML：
 
-受影响的表现：部分阅读器会按字面显示 `<p>` 标签；也有阅读器会自动反转义后正常渲染。 若你重度依赖 RSS 的富文本展示，需要自行把 `content:encoded` 改成 CDATA 包裹，例如：
+- `content:encoded` 用 `cdata()` 包裹，`]]>` 按 XML 规则拆成 `]]]]><![CDATA[>`；
+- `title` / `link` / `description` / `category` 等文本节点仍走 `escapeXml()` 转义；
+- `link` 与 `guid` 自己拼成绝对 URL，`pubDate` 用 `toUTCString()`（RFC 822），与原行为一致。
 
-```ts
-// src/pages/rss.xml.ts —— 自己拼 XML，而不是交给 @astrojs/rss
-const escaped = html.replace(/]]>/g, ']]]]><![CDATA[>')
-const customData = `<content:encoded><![CDATA[${escaped}]]></content:encoded>`
-```
+自查：`grep -c '&lt;p&gt;' dist/rss.xml` 应为 `0`；`<!\[CDATA\[` 与 `]]>` 的出现次数应相等。
 
 > 内联 HTML 的安全边界
 
@@ -227,6 +239,30 @@ Markdown 里写什么 HTML 就会输出什么（无净化）。不要在文章�
 `Markdown语法样例.md` 明确提示：「请勿使用缩进 4 个空格或一个制表符来创建代码块，因为不会显示。」
 
 原因是 `remarkBreaks` 把单换行转为 `<br>`，缩进块在解析阶段的边界行为与预期不符。请统一用围栏代码块 ``` ``` ```。
+
+### 4.1 MDX（`.mdx`）文章支持
+
+`.mdx` 与 `.md` 共用同一套 markdown 处理器，只是多了一层 MDX 编译，因此上文矩阵里的语法能力全部保留，额外获得三类能力：
+
+| 能力 | 写法 | 说明 |
+| --- | --- | --- |
+| 内联表达式 | `{2 ** 10}` | 任意 JavaScript 表达式，构建期求值后静态输出 |
+| 导出变量 | 文件顶部 `export const year = 2026`，正文写 `{year}` | 全篇可引用 |
+| JSX 与组件导入 | `import Callout from '../../components/mdx/Callout.astro'`，正文写 `<Callout type="tip" title="标题">内容</Callout>` | 导入路径相对当前文章文件解析；组件的子内容支持 Markdown |
+
+接入只需两处：`astro.config.mjs` 的 `integrations` 加 `mdx()`，`content.config.ts` 的 loader `pattern` 改为 `'**/*.{md,mdx}'`。`mdx()` 默认 `extendMarkdownConfig: true`，直接复用 `markdown.processor` 的自定义 unified 管线（`rehypeCodeBlock`、`remarkContainers`、`rehypeKatex` 等全部生效），不需要为 MDX 另维护一份插件链。
+
+与 `.md` 的差异点：
+
+| 差异 | 说明 |
+| --- | --- |
+| `raw` 节点转换 | `rehypeCodeBlock` / `rehypeImages` 会把节点替换成 `raw` 类型，`.md` 交给 `rehypeStringify` 直出，`@mdx-js` 编译阶段则不识别 `raw`。`src/lib/md/rehypeRawToElements.ts`（仅对 `.mdx` 生效）负责把 `raw` 逐个解析成真实 hast 元素；必须逐节点包 wrapper 树解析，不能对整棵树调 `rehype-raw`——MDX 管线最前面已有一次内置的 `rehype-raw` 往返，二次整树往返会把解析结果重复插入 |
+| 图片写法 | 用 Markdown 语法 `![alt](../images/x.webp)`。写成 JSX 的 `<img src="…">` 不经过 `rehypeImages`，没有 `.img-frame` 灯箱与 LQIP 占位（`generate-lqips.js` 的扫描正则同样只认 Markdown 图片语法） |
+| 裸花括号 | 正文里单独出现的 `{` 会按表达式解析，写普通文本要用反引号包裹（如 `` `{}` ``）或转义成 `\{` |
+| 字数统计 | `post.body` 对 `.mdx` 保留的是 MDX 源码，`wordCount()` / `readMinutes()` 直接可用（JSX 标签会按词计入，略有高估） |
+| RSS | `.mdx` 条目不走 `pipeline.ts`，由 `astro/container` 把 `render(post)` 的 Content 组件渲染成 HTML（见 [07-页面与路由.md#4.4](./07-页面与路由.md#44-rsssrcpagesrssxmlts)） |
+
+完整示例见 `src/content/posts/MDX示例文章.mdx`（slug：`mdx-example`），演示了表达式、导出变量、`.map()` 列表、内联样式与 `src/components/mdx/Callout.astro` 组件的导入用法。
 
 ## 5. 提示容器（`remarkContainers`）
 
@@ -271,7 +307,7 @@ details 是唯一可折叠的容器，标题变成 `<summary>`。
 | 开启标记 | 行首 `:::类型` + 可选标题（正则 `^:::([a-zA-Z]+)[ \t]*(.*)$`） |
 | 合法类型白名单 | `CONTAINER_TYPES = new Set(['info','tip','warning','danger','details'])` |
 | 结束标记 | 单独一行 `:::` |
-| 未闭合 | 不报错，降级：内容按普通段落展开，不生成容器 |
+| 未闭合 | 不报错，降级：内容按普通段落展开，`:::opener` 行也按普通文本保留（与类型不在白名单的行为一致，作者能直接看到问题），不生成容器 |
 | 类型不在白名单 | 视为普通段落，保留原样文本 |
 | 标题缺省 | 显示类型名（`title \|\| type`） |
 | 连续行合并 | `mergeLineRuns()` 把相邻行用 `<br>` 连接成一个段落，块级节点（列表、代码块）原样保留 |
@@ -433,9 +469,9 @@ function normalizeLanguage(raw) {
 `rehypeImages` 会把每个 `<img>` 包成：
 
 ```html
-<span class="img-frame" style="--img-lqip:linear-gradient(135deg,#aabbcc 0%,#ddeeff 50%,#112233 100%)">
-  <a class="img-lightbox" href="{src}" title="…">
-    <img src="{src}" alt="…" loading="lazy" decoding="async" />
+<span class="img-frame is-sized" style="--img-lqip:linear-gradient(135deg,#aabbcc 0%,#ddeeff 50%,#112233 100%)">
+  <a class="img-lightbox" href="{src}" title="…" data-pswp-width="512" data-pswp-height="512">
+    <img src="{src}" alt="…" width="512" height="512" loading="lazy" decoding="async" />
   </a>
 </span>
 ```
@@ -446,17 +482,21 @@ function normalizeLanguage(raw) {
 | 其余图 | `loading="lazy" decoding="async"` |
 | `data:` 开头的 src | 跳过包装，不处理 |
 | `title` 属性 | 存在则同时写到 `<img>` 与 `<a>` |
+| 尺寸已知 | 加 `is-sized` 类并写 `width`/`height`（来自 `.generated/lqips.json`）；`.img-frame.is-sized` 在加载期就用 `width: fit-content` 贴合图片，因此不会先撑满容器再回缩 |
+| 尺寸未知 | 保持 `class="img-frame"`，加载期仍是 `min-height: 8rem` 的 shimmer 骨架（`public/` 图片、外链图片、SVG 等） |
+| 灯箱尺寸 | 尺寸已知时同时给 `<a>` 写 `data-pswp-width`/`data-pswp-height`，PhotoSwipe 打开幻灯片前就能拿到原始尺寸，首次点击的缩放动画即为正确尺寸，不需要等图片 load |
 
 ### 7.2 LQIP（主色渐变占位）
 
 | 环节 | 实现 |
 | --- | --- |
-| 采样 | `scripts/generate-lqips.js`：`sharp(input).resize(2,2,{fit:'fill'}).removeAlpha().raw()` 取 4 像素，再用第 1、2、4 个像素（偏移 0、3、9 字节）拼成 18 位十六进制 |
-| 存储 | `.generated/lqips.json`：`{ "/content-images/883d9fc6f4cc516e.webp": "632d1b6a301b582816" }`（18 位无分隔符十六进制，3 个像素直接拼接） |
-| 消费 | `rehypeImages.ts` 读取（带 mtime 缓存），生成 `--img-lqip` 的 `linear-gradient(135deg, c1 0%, c2 50%, c3 100%)` |
+| 采样 | `scripts/generate-lqips.js`：`sharp(input).metadata()` 取原始宽高，再 `sharp(input).resize(2,2,{fit:'fill'}).removeAlpha().raw()` 取 4 像素，用第 1、2、4 个像素（偏移 0、3、9 字节）拼成 18 位十六进制 |
+| 存储 | `.generated/lqips.json`：`{ "/content-images/883d9fc6f4cc516e.webp": { "c": "632d1b6a301b582816", "w": 512, "h": 512 } }`（`c` 是 3 个像素拼接的 18 位十六进制，`w`/`h` 是原始尺寸） |
+| 消费 | `rehypeImages.ts` 读取（带 mtime 缓存）：`c` → `--img-lqip` 的 `linear-gradient(135deg, c1 0%, c2 50%, c3 100%)`；`w`/`h` → `<img>` 的 `width`/`height` 与 `.img-frame` 的 `is-sized` 类 |
+| 旧格式兼容 | 读到 `"c"` 形态的字符串（早期版本）或缺少 `w`/`h` 的条目时按「无尺寸」处理：仍生成渐变，但不写 `width`/`height`；下次构建会自动重算成新结构 |
 | 兜底 | 取色失败 → 无 `--img-lqip` → CSS 回退灰白 shimmer（`markdown.css` 的 `.img-frame:not(.is-loaded)`） |
 | 强制重算 | `LQIP_FORCE=1 pnpm build`（PowerShell：`$env:LQIP_FORCE=1; pnpm build`） |
-| 增量 | 默认只处理 `.generated/lqips.json` 里没有的 key，已存在的跳过（改了图片文件内容但路径不变时不会重算，需 `LQIP_FORCE=1`） |
+| 增量 | 默认只处理 `.generated/lqips.json` 里不是当前结构的 key（缺 `c`/`w`/`h` 都会重算）；改了图片文件内容但路径不变时不会重算，需 `LQIP_FORCE=1` |
 
 ### 7.3 图片路由 `/content-images/[file]`
 
@@ -513,7 +553,9 @@ function normalizeLanguage(raw) {
 | `![图](../images/logo.webp)` | `/content-images/{hash}.webp` |
 | `[不支持](../data/file.json)` | 保持原样 + 构建期警告 |
 
-### 8.2 解析流程（`src/lib/md/rehypeRelativeLinks.ts`）
+### 8.2 解析流程（`src/lib/md/linkResolve.ts`）
+
+解析逻辑集中在 `linkResolve.ts` 的 `resolveHrefTarget()`；`src/lib/md/rehypeRelativeLinks.ts` 只是它的 rehype 外壳（遍历 hast 树、把命中的 `href` 换掉），构建期的反向链接统计（`scripts/ensure-post-slugs.js`）也调用同一个函数，两处判定不会各自漂移。
 
 ```text
 1. 只处理 isRelativeSrc(href) 的链接（非 http(s)/非 //、非 /、非 #、非 data:）
@@ -527,6 +569,8 @@ function normalizeLanguage(raw) {
 5. 若是图片扩展名 → resolveContentImage → /content-images/{hash}.ext
 6. 其他 → 保持原样 + 警告
 ```
+
+`resolveHrefTarget()` 的最后一个参数是警告回调（默认 `warnRelLink`）。反向链接统计会传一个空回调，避免与 `rehypeRelativeLinks` 的构建期警告重复打印。
 
 ### 8.3 构建期警告一览
 

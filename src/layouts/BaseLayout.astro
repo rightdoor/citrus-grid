@@ -40,7 +40,8 @@ const ogImageURL = new URL(seoImage || siteConfig.logo, Astro.site)
 
 const isHomePage = (() => {
   const p = Astro.url.pathname.replace(/\/+$/, '') || '/'
-  return p === '/' || /^\/\d+$/.test(p)
+  // /404 会命中纯数字分页正则，但它不是分页页，不能显示个人名片
+  return p !== '/404' && (p === '/' || /^\/\d+$/.test(p))
 })()
 
 const ogLocale = ({ zh: 'zh_CN', ja: 'ja_JP', en: 'en_US' } as const)[lang]
@@ -92,7 +93,7 @@ const jsonLd =
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageURL.href} />
-    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />}
     <title>{pageTitle}</title>
     <script is:inline define:vars={{ defaultTheme: siteConfig.defaultTheme }}>
       ;(function () {

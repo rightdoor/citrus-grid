@@ -38,6 +38,8 @@
     "copy": "Copy",
     "copied": "Copied",
     "footnotes": "Footnotes",
+    "backlinks": "{count} posts reference this article",
+    "related": "Related posts",
     "copyright": {
       "author": "All rights reserved © {year}",
       "licenseLabel": "License",

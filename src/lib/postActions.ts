@@ -22,7 +22,9 @@ export function smoothScrollToHeading(id: string): HTMLElement | null {
   const el = findAnchorTarget(id)
   if (!el) return null
   const top = el.getBoundingClientRect().top + window.scrollY - HEADING_SCROLL_OFFSET
-  window.scrollTo({ top, behavior: 'smooth' })
+  // 与 swupBindings 的同款滚动一致：尊重 prefers-reduced-motion
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  window.scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' })
   return el
 }
 

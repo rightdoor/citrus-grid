@@ -63,15 +63,32 @@ function collectMdFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name)
     if (entry.isDirectory()) files.push(...collectMdFiles(full))
-    else if (entry.isFile() && entry.name.endsWith('.md')) files.push(full)
+    else if (entry.isFile() && /\.mdx?$/.test(entry.name)) files.push(full)
   }
   return files
 }
 
-async function sampleColors(sharp, input) {
-  const raw = await sharp(input).resize(2, 2, { fit: 'fill' }).removeAlpha().raw().toBuffer()
+async function readImageInfo(sharp, input) {
+  const image = sharp(input)
+  const meta = await image.metadata()
+  const raw = await image.resize(2, 2, { fit: 'fill' }).removeAlpha().raw().toBuffer()
 
-  return raw.toString('hex', 0, 3) + raw.toString('hex', 3, 6) + raw.toString('hex', 9, 12)
+  return {
+    c: raw.toString('hex', 0, 3) + raw.toString('hex', 3, 6) + raw.toString('hex', 9, 12),
+    w: Number(meta.width) || 0,
+    h: Number(meta.height) || 0,
+  }
+}
+
+function isCurrentEntry(value) {
+  return (
+    Boolean(value) &&
+    typeof value === 'object' &&
+    typeof value.c === 'string' &&
+    value.c.length === 18 &&
+    Number.isFinite(value.w) &&
+    Number.isFinite(value.h)
+  )
 }
 
 async function fetchBuffer(url, timeoutMs = 8000) {
@@ -108,21 +125,27 @@ async function main() {
           targets.set(src, { kind: 'url', source: src })
         continue
       }
-      const localPath = path.resolve(path.dirname(mdFile), decodeURIComponent(src))
+      // 非法百分号编码（如文件名含裸 %）时按原文处理，与 contentImages.safeDecode 一致，
+      // 不能让单个坏文件名使整批 LQIP 失效
+      let decoded = src
+      try {
+        decoded = decodeURIComponent(src)
+      } catch {}
+      const localPath = path.resolve(path.dirname(mdFile), decoded)
       const key = contentImageKey(localPath)
       if (key && existsSync(localPath) && !targets.has(key))
         targets.set(key, { kind: 'file', source: localPath })
     }
   }
 
-  const pending = [...targets.entries()].filter(([key]) => !(key in existing))
+  const pending = [...targets.entries()].filter(([key]) => !isCurrentEntry(existing[key]))
   if (pending.length > 0) {
     const sharp = requireFromHere('sharp')
     const failed = []
     for (const [key, target] of pending) {
       try {
         const input = target.kind === 'file' ? target.source : await fetchBuffer(target.source)
-        existing[key] = await sampleColors(sharp, input)
+        existing[key] = await readImageInfo(sharp, input)
       } catch (err) {
         failed.push(`${key} (${err?.message ?? err})`)
       }

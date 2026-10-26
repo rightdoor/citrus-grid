@@ -38,6 +38,8 @@
     "copy": "复制",
     "copied": "已复制",
     "footnotes": "脚注",
+    "backlinks": "{count} 篇文章引用本文",
+    "related": "相关文章",
     "copyright": {
       "author": "版权所有 © {year}",
       "licenseLabel": "许可协议",

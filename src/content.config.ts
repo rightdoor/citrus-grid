@@ -24,7 +24,7 @@ function parseDateAsUtc(v: unknown) {
 }
 
 const posts = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/posts' }),
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/posts' }),
   schema: z.object({
     title: z.string().min(1),
     slug: z

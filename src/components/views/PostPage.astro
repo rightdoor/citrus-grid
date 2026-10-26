@@ -14,8 +14,10 @@ import {
   mdiClockOutline,
   mdiClose,
   mdiEye,
+  mdiFileLinkOutline,
   mdiFolderOutline,
   mdiLayers,
+  mdiLinkVariant,
   mdiTableOfContents,
   mdiTextRecognition,
   mdiUpdate,
@@ -30,6 +32,8 @@ interface Props {
   nextPost?: Post | null
   seriesPosts?: Post[]
   seriesIdx?: number
+  backlinks?: Post[]
+  related?: Post[]
 }
 
 const {
@@ -39,6 +43,8 @@ const {
   nextPost = null,
   seriesPosts = [],
   seriesIdx = -1,
+  backlinks = [],
+  related = [],
 } = Astro.props
 const t = useTranslations(lang)
 
@@ -233,9 +239,46 @@ const postYear = post.data.published.getUTCFullYear()
         {t('post.copyright.disclaimer')}
       </div>
     </div>
+    {
+      related.length > 0 && (
+        <div class="mb-5 rounded-[8px] border border-line-light bg-surface px-4 py-3.5 text-[0.85rem] shadow-card">
+          <div class="mb-2 flex items-center gap-1.5 text-[0.78rem] font-semibold tracking-[0.06em] text-ink-3">
+            <Icon d={mdiFileLinkOutline} class="text-sm" />
+            <span>{t('post.related')}</span>
+          </div>
+          <ul class="m-0 list-none space-y-1.5 p-0">
+            {related.map((item) => (
+              <li>
+                <a href={postUrl(item)} class="text-accent transition hover:text-accent-hover">
+                  {item.data.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+    {
+      backlinks.length > 0 && (
+        <div class="mb-5 rounded-[8px] border border-line-light bg-surface px-4 py-3.5 text-[0.85rem] shadow-card">
+          <div class="mb-2 flex items-center gap-1.5 text-[0.78rem] font-semibold tracking-[0.06em] text-ink-3">
+            <Icon d={mdiLinkVariant} class="text-sm" />
+            <span>{t('post.backlinks', { count: backlinks.length })}</span>
+          </div>
+          <ul class="m-0 list-none space-y-1.5 p-0">
+            {backlinks.map((ref) => (
+              <li>
+                <a href={postUrl(ref)} class="text-accent transition hover:text-accent-hover">
+                  {ref.data.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
     <PostNav lang={lang} prev={navPrev} next={navNext} />
   </footer>
-
   <Comments />
 
   {
@@ -287,7 +330,13 @@ const postYear = post.data.published.getUTCFullYear()
 
   {
     hasToc && (
-      <div id="toc-modal" class="wp-overlay fixed inset-0 z-[1500] hidden items-center justify-center bg-black/40 p-4">
+      <div
+        id="toc-modal"
+        class="wp-overlay fixed inset-0 z-[1500] hidden items-center justify-center bg-black/40 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('post.toc')}
+      >
         <div class="wp-modal-panel flex max-h-[85vh] w-full flex-col rounded-[8px] border border-line-light bg-surface shadow-card" style="max-width: 520px">
           <div class="flex items-center justify-between border-b border-line-light px-5 py-3.5">
             <h3 class="font-bold text-ink">{t('post.toc')}</h3>

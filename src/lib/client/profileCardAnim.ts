@@ -11,7 +11,8 @@ let bound = false
 
 const isHomePath = (path: string) => {
   const p = path.replace(/\/+$/, '') || '/'
-  return p === '/' || /^\/\d+$/.test(p)
+  // 与 BaseLayout 的 isHomePage 一致：/404 命中纯数字正则但不是分页页
+  return p !== '/404' && (p === '/' || /^\/\d+$/.test(p))
 }
 
 profileCardRoot?.addEventListener('animationend', () => {

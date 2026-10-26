@@ -116,12 +116,14 @@ draft: false
 | --- | --- |
 | `pnpm dev` / `start` | Start development server |
 | `pnpm build` | Production build, then automatically injects `modulepreload`, minifies inline scripts, and runs `pagefind` to generate search index |
+| `pnpm build:fresh` | Clears the Astro caches (`.astro`, `node_modules/.astro`, `node_modules/.cache/jiti`) before building, for when a markdown plugin change does not show up on the page |
 | `pnpm preview` | Preview the `dist` build output |
 | `pnpm check` | Astro type checking (`astro check`) |
 | `pnpm type-check` | TypeScript type checking (`tsc --noEmit`, covers `src` and `scripts`) |
 | `pnpm check-i18n` | Verifies that the zh / ja / en message key sets match |
 | `pnpm check-swup-ignore` | Verifies that the inline regexes in `shouldIgnoreSwup` match `ASSET_EXT_RE` / `RESERVED_PATH_RE` |
-| `pnpm new-post [slug]` | Create a new article template at `src/content/posts/<slug>.md` (named after today's date when the slug is omitted) |
+| `pnpm verify` | Runs `astro check`, `tsc --noEmit`, `check-i18n` and `check-swup-ignore` in sequence, stopping at the first failure |
+| `pnpm new-post [slug] [--mdx]` | Create a new article template at `src/content/posts/<slug>.md`; with `--mdx` it creates a `.mdx` template including the Callout import (named after today's date when the slug is omitted) |
 | `pnpm format-post-meta` | Reorder frontmatter fields of all articles uniformly |
 | `pnpm format` | Biome formatting for `src` |
 | `pnpm format:all` | Biome check and fix across the entire project (src, scripts, root config files) |
@@ -194,7 +196,7 @@ To customize the theme (change the accent color, adjust the layout, add componen
 | [03-主题与样式定制.md](../src/content/posts/all/03-主题与样式定制.md) | Full `--wp-*` variable reference, dark mode, re-theming steps |
 | [04-站点配置.md](../src/content/posts/all/04-站点配置.md) | Parameter tables for `site.config.ts` and the other 5 config files |
 | [05-内容与Markdown.md](../src/content/posts/all/05-内容与Markdown.md) | Frontmatter reference, Markdown plugin chain, images and relative links |
-| [06-构建与脚本.md](../src/content/posts/all/06-构建与脚本.md) | The 6 build scripts, output structure, deployment |
+| [06-构建与脚本.md](../src/content/posts/all/06-构建与脚本.md) | The 7 build scripts, output structure, deployment |
 | [07-页面与路由.md](../src/content/posts/all/07-页面与路由.md) | Route table, SEO, i18n status and how to extend it |
 | [08-插件系统.md](../src/content/posts/all/08-插件系统.md) | Comment / statistics plugin contracts, music player |
 | [09-常见改造与排错.md](../src/content/posts/all/09-常见改造与排错.md) | Task-oriented recipes, FAQ, pre-flight checklist |

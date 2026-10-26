@@ -196,7 +196,7 @@ const ui = {
       </script>
 
       <script>
-        import { extractAudioCover } from '@/lib/audioCover'
+        import { extractAudioCover, revokeAudioCover } from '@/lib/audioCover'
         import { clampRatio, createPlayer, formatTime, type PlayerTrack } from '@/lib/player'
         import {
           bindAudioEvents,
@@ -251,6 +251,9 @@ const ui = {
           })
           const layout = createLayoutController(fab, panel, panelList)
 
+          // 当前已应用内嵌封面 blob 的曲目 src（未应用内嵌封面时为 null）
+          let blobSrcApplied: string | null = null
+
           const player = createPlayer(tracks, createMediaPort(audio), {
             onTrack(track, i) {
               titleEl.textContent = track.title
@@ -258,11 +261,17 @@ const ui = {
               timeEl.textContent = '0:00'
               durEl.textContent = '0:00'
               view.setFill(0)
+              // 已应用到界面的内嵌封面 blob 随切曲失效：延迟回收
+              if (blobSrcApplied && blobSrcApplied !== track.src) {
+                revokeAudioCover(blobSrcApplied)
+              }
+              blobSrcApplied = null
               view.applyCover(track.cover)
               extractAudioCover(track.src).then((res) => {
                 if (player.state.index !== i || !res) return
                 player.setHasCover(true)
                 view.applyCover(res.blobUrl)
+                blobSrcApplied = track.src
               })
             },
             onState: view.onState,

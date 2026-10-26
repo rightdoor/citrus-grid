@@ -11,25 +11,10 @@ export async function initPhotoswipe() {
   const container = document.querySelector('.post-content')
   if (!container?.querySelector('a.img-lightbox img')) return
   const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a.img-lightbox'))
-  const imgs = links
-    .map((a) => a.querySelector<HTMLImageElement>('img'))
-    .filter((img): img is HTMLImageElement => !!img)
-  await Promise.race([
-    Promise.all(
-      imgs.map((img) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise<void>((resolve) => {
-              img.addEventListener('load', () => resolve(), { once: true })
-              img.addEventListener('error', () => resolve(), { once: true })
-            }),
-      ),
-    ),
-    new Promise((resolve) => setTimeout(resolve, 2500)),
-  ])
   links.forEach((a) => {
+    if (a.dataset.pswpWidth) return
     const img = a.querySelector<HTMLImageElement>('img')
-    if (!img || a.dataset.pswpWidth) return
+    if (!img) return
     const setDims = () => {
       if (img.naturalWidth) {
         a.dataset.pswpWidth = String(img.naturalWidth)

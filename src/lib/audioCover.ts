@@ -179,9 +179,11 @@ function parseFlacPictureBlock(d: Uint8Array): PictureData | null {
   return { mime: normalizeMime(mime, data), data }
 }
 
-async function readLimited(res: Response, limit: number): Promise<Uint8Array> {
-  if (!res.body) return new Uint8Array()
-  const reader = res.body.getReader()
+async function readFrom(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  limit: number,
+  cancelAfter: boolean,
+): Promise<Uint8Array> {
   const chunks: Uint8Array[] = []
   let total = 0
   try {
@@ -196,13 +198,19 @@ async function readLimited(res: Response, limit: number): Promise<Uint8Array> {
       } else {
         chunks.push(value.subarray(0, need))
         total = limit
-        await reader.cancel()
         break
       }
     }
   } catch {
   } finally {
-    reader.releaseLock()
+    if (cancelAfter) {
+      try {
+        await reader.cancel()
+      } catch {}
+      try {
+        reader.releaseLock()
+      } catch {}
+    }
   }
   if (!chunks.length) return new Uint8Array(0)
   const out = new Uint8Array(total)
@@ -212,6 +220,12 @@ async function readLimited(res: Response, limit: number): Promise<Uint8Array> {
     o += c.length
   }
   return out
+}
+
+async function readLimited(res: Response, limit: number): Promise<Uint8Array> {
+  if (!res.body) return new Uint8Array()
+  const reader = res.body.getReader()
+  return readFrom(reader, limit, true)
 }
 
 async function fetchBytes(
@@ -233,7 +247,71 @@ async function fetchBytes(
   }
 }
 
-async function extractMp3(buf: Uint8Array, url: string): Promise<ExtractedCover | null> {
+interface HeadResult {
+  buf: Uint8Array
+  // 200（服务器忽略 Range）时保留的响应流，可从断点续读
+  reader: ReadableStreamDefaultReader<Uint8Array> | null
+  rangeSupported: boolean
+}
+
+// 首次请求：Range 支持时读完前缀即可；
+// 200 时保留流不取消，后续需要后段数据时直接续读，
+// 避免旧实现里为取文件后段而二次全量下载（前缀部分重复传输）
+async function fetchHead(url: string): Promise<HeadResult | null> {
+  try {
+    const res = await fetch(url, {
+      cache: 'no-store',
+      headers: { Range: `bytes=0-${INITIAL_LIMIT - 1}` },
+    })
+    if (!res.ok && res.status !== 206) return null
+    if (res.status === 206) {
+      return { buf: await readLimited(res, INITIAL_LIMIT), reader: null, rangeSupported: true }
+    }
+    if (!res.body) return { buf: new Uint8Array(), reader: null, rangeSupported: false }
+    const reader = res.body.getReader()
+    const buf = await readFrom(reader, INITIAL_LIMIT, false)
+    return { buf, reader, rangeSupported: false }
+  } catch {
+    return null
+  }
+}
+
+// 补齐到 wantEnd（不含）：Range 支持时发起新的区间请求；
+// 200 时从保留的流续读，两次读取合并为一次顺序下载
+async function fetchRest(
+  head: HeadResult,
+  url: string,
+  wantEnd: number,
+): Promise<Uint8Array | null> {
+  const start = head.buf.length
+  if (wantEnd <= start) return head.buf
+  const need = wantEnd - start
+  if (head.reader) {
+    const more = await readFrom(head.reader, need, true)
+    head.reader = null
+    if (more.length === 0) return null
+    return concatBytes(head.buf, more)
+  }
+  if (!head.rangeSupported) return null
+  const rest = await fetchBytes(url, start, wantEnd - 1)
+  if (!rest || rest.length === 0) return null
+  return concatBytes(head.buf, rest)
+}
+
+function releaseHead(head: HeadResult) {
+  const reader = head.reader
+  if (!reader) return
+  head.reader = null
+  try {
+    reader.cancel().catch(() => {})
+  } catch {}
+  try {
+    reader.releaseLock()
+  } catch {}
+}
+
+async function extractMp3(head: HeadResult, url: string): Promise<ExtractedCover | null> {
+  const buf = head.buf
   const major = buf[3]
   if (major < 2 || major > 4) return null
   const tagSize = syncsafe32(buf, 6)
@@ -241,9 +319,9 @@ async function extractMp3(buf: Uint8Array, url: string): Promise<ExtractedCover 
   const tagEnd = 10 + tagSize
   let tag = buf
   if (tagEnd > buf.length) {
-    const rest = await fetchBytes(url, buf.length, tagEnd - 1)
+    const rest = await fetchRest(head, url, tagEnd)
     if (!rest || rest.length === 0) return null
-    tag = concatBytes(buf, rest)
+    tag = rest
   }
   const pic = findMp3Picture(tag.subarray(0, Math.min(tag.length, tagEnd)))
   if (!pic) return null
@@ -253,7 +331,8 @@ async function extractMp3(buf: Uint8Array, url: string): Promise<ExtractedCover 
   }
 }
 
-async function extractFlac(buf: Uint8Array, url: string): Promise<ExtractedCover | null> {
+async function extractFlac(head: HeadResult, url: string): Promise<ExtractedCover | null> {
+  const buf = head.buf
   let pos = 4
   while (pos + 4 <= buf.length) {
     const header = buf[pos]
@@ -265,9 +344,9 @@ async function extractFlac(buf: Uint8Array, url: string): Promise<ExtractedCover
     if (type === 6) {
       let block = buf.subarray(body, Math.min(body + len, buf.length))
       if (body + len > buf.length) {
-        const rest = await fetchBytes(url, buf.length, body + len - 1)
-        if (!rest || rest.length === 0) return null
-        block = concatBytes(block, rest)
+        const full = await fetchRest(head, url, body + len)
+        if (!full || full.length === 0) return null
+        block = full.subarray(body)
       }
       const pic = parseFlacPictureBlock(block)
       if (!pic) return null
@@ -284,6 +363,9 @@ async function extractFlac(buf: Uint8Array, url: string): Promise<ExtractedCover
 
 const cache = new Map<string, Promise<ExtractedCover | null>>()
 
+// 撤销延迟：切曲后给界面换图留出余量，避免撤销仍被 <img> 引用的 URL
+const REVOKE_DELAY_MS = 60_000
+
 export function extractAudioCover(src: string): Promise<ExtractedCover | null> {
   const hit = cache.get(src)
   if (hit) return hit
@@ -292,15 +374,36 @@ export function extractAudioCover(src: string): Promise<ExtractedCover | null> {
   return p
 }
 
+// 曲目切换后回收旧封面的 blob URL：撤销是延迟执行的，同时移除缓存条目，
+// 切回该曲目会重新提取（代价是一次元数据请求）；
+// 不撤销的话会话内切换曲目会累积持有整张封面图
+export function revokeAudioCover(src: string) {
+  const hit = cache.get(src)
+  if (!hit) return
+  cache.delete(src)
+  hit
+    .then((cover) => {
+      if (!cover) return
+      window.setTimeout(() => URL.revokeObjectURL(cover.blobUrl), REVOKE_DELAY_MS)
+    })
+    .catch(() => {})
+}
+
 async function doExtract(src: string): Promise<ExtractedCover | null> {
   try {
     const url =
       src.startsWith('/') || src.startsWith('./') ? new URL(src, location.origin).href : src
-    const buf = await fetchBytes(url, 0, INITIAL_LIMIT - 1)
-    if (!buf || buf.length < 10) return null
-    if (ascii(buf, 0, 3) === 'ID3') return await extractMp3(buf, url)
-    if (ascii(buf, 0, 4) === 'fLaC') return await extractFlac(buf, url)
-    return null
+    const head = await fetchHead(url)
+    if (!head) return null
+    try {
+      if (head.buf.length < 10) return null
+      if (ascii(head.buf, 0, 3) === 'ID3') return await extractMp3(head, url)
+      if (ascii(head.buf, 0, 4) === 'fLaC') return await extractFlac(head, url)
+      return null
+    } finally {
+      // 所有出口都释放可能仍持有的响应流（200 续读场景）
+      releaseHead(head)
+    }
   } catch {
     return null
   }

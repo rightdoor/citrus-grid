@@ -364,6 +364,33 @@
   justify-content: center;
 }
 
+.social-strip > :first-child:not([hidden]),
+.social-strip > [hidden] + :not([hidden]) {
+  width: 84px;
+  padding-left: 42px;
+  clip-path: path("M 21 0 A 21 21 0 0 1 42 21 V 34 A 8 8 0 0 0 50 42 H 84 V 0 H 21 Z");
+}
+
+.social-strip > :last-child {
+  width: 84px;
+  padding-right: 42px;
+  clip-path: path("M 63 0 H 0 V 42 H 34 A 8 8 0 0 0 42 34 V 21 A 21 21 0 0 1 63 0 Z");
+}
+
+.social-strip > :first-child:last-child:not([hidden]) {
+  width: 126px;
+  padding: 0 42px;
+  clip-path: path(
+    "M 21 0 A 21 21 0 0 1 42 21 V 34 A 8 8 0 0 0 50 42 H 76 A 8 8 0 0 0 84 34 V 21 A 21 21 0 0 1 105 0 H 21 Z"
+  );
+}
+
+.social-strip > :first-child:not([hidden]):focus-visible,
+.social-strip > [hidden] + :not([hidden]):focus-visible,
+.social-strip > :last-child:focus-visible {
+  outline-offset: -3px;
+}
+
 .social-btn {
   position: relative;
   display: inline-flex;

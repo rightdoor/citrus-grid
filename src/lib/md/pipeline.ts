@@ -24,8 +24,8 @@ export interface RenderOptions {
   site: string
 }
 
-export async function renderMarkdownHtml(source: string, options: RenderOptions): Promise<string> {
-  const proc = unified()
+function buildProcessor(site: string) {
+  return unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkBreaks)
@@ -42,7 +42,7 @@ export async function renderMarkdownHtml(source: string, options: RenderOptions)
     .use(rehypeImages)
     .use(rehypeRelativeLinks)
     .use(rehypeTableWrap)
-    .use(rehypeExternalLinks, { site: options.site })
+    .use(rehypeExternalLinks, { site })
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
       behavior: 'append',
@@ -51,6 +51,18 @@ export async function renderMarkdownHtml(source: string, options: RenderOptions)
     } satisfies AutolinkOptions)
     .use(rehypeRaw)
     .use(rehypeStringify, { allowDangerousHtml: true })
+}
+
+// 每次调用重建完整 unified 管线的初始化开销可观（RSS 生成会对每篇文章调用一次），
+// 按 site 记忆化复用 processor
+const processorCache = new Map<string, ReturnType<typeof buildProcessor>>()
+
+export async function renderMarkdownHtml(source: string, options: RenderOptions): Promise<string> {
+  let proc = processorCache.get(options.site)
+  if (!proc) {
+    proc = buildProcessor(options.site)
+    processorCache.set(options.site, proc)
+  }
   const file = options.filePath
     ? { value: source, path: pathToFileURL(options.filePath).href }
     : { value: source }

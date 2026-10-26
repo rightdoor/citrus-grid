@@ -1,12 +1,17 @@
+import { type FocusTrap, trapFocus } from '@/lib/focusTrap'
 import { findAnchorTarget, HEADING_SCROLL_OFFSET, smoothScrollToHeading } from '@/lib/postActions'
 
 const TOC_SNAP_RANGE = 80
 
 let postBody: HTMLElement | null = null
+// 标题集合在一次页面生命周期内不变：initToc 时缓存，
+// 滚动回调（rAF 节流）只做测量，不再每帧 querySelectorAll
+let headingEls: HTMLElement[] = []
 let activeHeading = ''
 let tocModal: HTMLElement | null = null
 let tocCloseTimer: number | undefined
 let tocCollapsed = false
+let tocTrap: FocusTrap | null = null
 
 function tocScrollDelta(list: HTMLElement, active: HTMLElement): number {
   const listRect = list.getBoundingClientRect()
@@ -18,9 +23,9 @@ function tocScrollDelta(list: HTMLElement, active: HTMLElement): number {
 }
 
 function updateActiveToc() {
-  if (!postBody) return
-  const headingEls = Array.from(postBody.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'))
-  if (!headingEls.length) return
+  // isConnected 防护换页窗口期：swup 替换 DOM 后、initToc 刷新缓存前
+  // 触发的滚动事件不应使用已脱离文档的旧标题
+  if (!headingEls.length || !headingEls[0].isConnected) return
   const threshold = HEADING_SCROLL_OFFSET + 16
   let currentByPassed: string | null = null
   let snapId: string | null = null
@@ -60,14 +65,8 @@ function updateActiveToc() {
 }
 
 function scrollTocListToActive(list: HTMLElement, active: HTMLElement) {
-  const listRect = list.getBoundingClientRect()
-  const activeRect = active.getBoundingClientRect()
-  const pad = 12
-  if (activeRect.top < listRect.top + pad) {
-    list.scrollTop += activeRect.top - listRect.top - pad
-  } else if (activeRect.bottom > listRect.bottom - pad) {
-    list.scrollTop += activeRect.bottom - listRect.bottom + pad
-  }
+  const delta = tocScrollDelta(list, active)
+  if (delta) list.scrollTop += delta
 }
 
 function openTocModal() {
@@ -76,17 +75,25 @@ function openTocModal() {
   tocModal.classList.remove('wp-closing')
   tocModal.classList.remove('hidden')
   tocModal.classList.add('flex')
+  tocTrap = trapFocus(tocModal)
   requestAnimationFrame(() => {
     if (!tocModal) return
     const modalList = tocModal.querySelector<HTMLElement>('.overflow-y-auto')
     const active = modalList?.querySelector<HTMLElement>('.toc-active')
-    if (modalList && active) scrollTocListToActive(modalList, active)
+    if (modalList && active)
+      scrollTocListToActive(modalList, active)
+      // 焦点移入当前/首个目录项，键盘用户打开后可直接 Tab 浏览
+    ;(active ?? modalList?.querySelector<HTMLElement>('.toc-link'))?.focus({
+      preventScroll: true,
+    })
   })
 }
 
 function closeTocModal(animated = true) {
   if (!tocModal || tocModal.classList.contains('hidden')) return
   window.clearTimeout(tocCloseTimer)
+  tocTrap?.release()
+  tocTrap = null
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const done = () => {
     if (!tocModal) return
@@ -157,7 +164,14 @@ window.addEventListener('resize', () => {
 })
 
 export function initToc() {
+  // 换页后旧弹层元素已被移除，残留的 trap 直接释放
+  // （归还焦点对已脱离文档的旧元素是空操作，无副作用）
+  tocTrap?.release()
+  tocTrap = null
   postBody = document.querySelector<HTMLElement>('.post-content')
+  headingEls = postBody
+    ? Array.from(postBody.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'))
+    : []
   activeHeading = ''
   document.querySelectorAll('body > #toc-modal').forEach((el) => {
     el.remove()

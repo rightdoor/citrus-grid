@@ -44,39 +44,99 @@ export interface PlayerElements {
 export function queryPlayerElements(): PlayerElements | null {
   const root = document.querySelector<HTMLElement>('[data-music-player]')
   if (!root) return null
-  const q = <T extends Element>(sel: string) => root.querySelector<T>(sel) as T
+  // 任一必需子元素缺失即整体返回 null（fail fast），由调用方的空值守卫停用播放器；
+  // 不做非空断言，否则模板改动后要到 audio.src 等调用处才抛 TypeError
+  const q = <T extends Element>(sel: string): T | null => root.querySelector<T>(sel)
+  const audio = q<HTMLAudioElement>('[data-music-audio]')
+  const fab = q<HTMLButtonElement>('[data-music-open]')
+  const panel = q<HTMLElement>('[data-music-panel]')
+  const panelList = q<HTMLElement>('[data-music-panel-list]')
+  const disc = q<HTMLImageElement>('[data-music-disc]')
+  const cover = q<HTMLImageElement>('[data-music-cover]')
+  const title = q<HTMLElement>('[data-music-title]')
+  const index = q<HTMLElement>('[data-music-index]')
+  const progress = q<HTMLElement>('[data-music-progress]')
+  const fill = q<HTMLElement>('[data-music-fill]')
+  const thumb = q<HTMLElement>('[data-music-thumb]')
+  const time = q<HTMLElement>('[data-music-current]')
+  const duration = q<HTMLElement>('[data-music-duration]')
+  const showList = q<HTMLButtonElement>('[data-music-showlist]')
+  const closeList = q<HTMLButtonElement>('[data-music-closelist]')
+  const mode = q<HTMLButtonElement>('[data-music-mode]')
+  const mute = q<HTMLButtonElement>('[data-music-mute]')
+  const volBar = q<HTMLElement>('[data-music-volbar]')
+  const volFill = q<HTMLElement>('[data-music-volfill]')
+  const volThumb = q<HTMLElement>('[data-music-volthumb]')
+  const listCount = q<HTMLElement>('[data-music-listcount]')
+  const scrollbar = q<HTMLElement>('[data-music-scrollbar]')
+  const scrollThumb = q<HTMLElement>('[data-music-scrollthumb]')
+  const prev = q<HTMLButtonElement>('[data-music-prev]')
+  const play = q<HTMLButtonElement>('[data-music-play]')
+  const stop = q<HTMLButtonElement>('[data-music-stop]')
+  const next = q<HTMLButtonElement>('[data-music-next]')
+  if (
+    !audio ||
+    !fab ||
+    !panel ||
+    !panelList ||
+    !disc ||
+    !cover ||
+    !title ||
+    !index ||
+    !progress ||
+    !fill ||
+    !thumb ||
+    !time ||
+    !duration ||
+    !showList ||
+    !closeList ||
+    !mode ||
+    !mute ||
+    !volBar ||
+    !volFill ||
+    !volThumb ||
+    !listCount ||
+    !scrollbar ||
+    !scrollThumb ||
+    !prev ||
+    !play ||
+    !stop ||
+    !next
+  ) {
+    return null
+  }
   const list = root.querySelector<HTMLElement>('[data-music-list]')
   return {
     root,
-    audio: q<HTMLAudioElement>('[data-music-audio]'),
-    fab: q<HTMLButtonElement>('[data-music-open]'),
-    panel: q<HTMLElement>('[data-music-panel]'),
-    panelList: q<HTMLElement>('[data-music-panel-list]'),
-    disc: q<HTMLImageElement>('[data-music-disc]'),
-    cover: q<HTMLImageElement>('[data-music-cover]'),
-    title: q<HTMLElement>('[data-music-title]'),
-    index: q<HTMLElement>('[data-music-index]'),
-    progress: q<HTMLElement>('[data-music-progress]'),
-    fill: q<HTMLElement>('[data-music-fill]'),
-    thumb: q<HTMLElement>('[data-music-thumb]'),
-    time: q<HTMLElement>('[data-music-current]'),
-    duration: q<HTMLElement>('[data-music-duration]'),
-    showList: q<HTMLButtonElement>('[data-music-showlist]'),
-    closeList: q<HTMLButtonElement>('[data-music-closelist]'),
-    mode: q<HTMLButtonElement>('[data-music-mode]'),
-    mute: q<HTMLButtonElement>('[data-music-mute]'),
-    volBar: q<HTMLElement>('[data-music-volbar]'),
-    volFill: q<HTMLElement>('[data-music-volfill]'),
-    volThumb: q<HTMLElement>('[data-music-volthumb]'),
-    listCount: q<HTMLElement>('[data-music-listcount]'),
+    audio,
+    fab,
+    panel,
+    panelList,
+    disc,
+    cover,
+    title,
+    index,
+    progress,
+    fill,
+    thumb,
+    time,
+    duration,
+    showList,
+    closeList,
+    mode,
+    mute,
+    volBar,
+    volFill,
+    volThumb,
+    listCount,
     list,
     items: list ? [...list.querySelectorAll<HTMLElement>('[data-music-item]')] : [],
-    scrollbar: q<HTMLElement>('[data-music-scrollbar]'),
-    scrollThumb: q<HTMLElement>('[data-music-scrollthumb]'),
-    prev: q<HTMLButtonElement>('[data-music-prev]'),
-    play: q<HTMLButtonElement>('[data-music-play]'),
-    stop: q<HTMLButtonElement>('[data-music-stop]'),
-    next: q<HTMLButtonElement>('[data-music-next]'),
+    scrollbar,
+    scrollThumb,
+    prev,
+    play,
+    stop,
+    next,
   }
 }
 
@@ -441,18 +501,22 @@ export function bindAudioEvents(
 
 export function bindProgressDrag(el: HTMLElement, onSeek: (ratio: number) => void): () => boolean {
   const drag = { active: false }
-  const ratioFrom = (clientX: number) => {
+  const ratioFrom = (clientX: number): number | null => {
     const rect = el.getBoundingClientRect()
+    if (rect.width <= 0) return null
     return clampRatio((clientX - rect.left) / rect.width)
   }
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault()
     drag.active = true
     el.setPointerCapture(e.pointerId)
-    onSeek(ratioFrom(e.clientX))
+    const r = ratioFrom(e.clientX)
+    if (r !== null) onSeek(r)
   })
   el.addEventListener('pointermove', (e) => {
-    if (drag.active) onSeek(ratioFrom(e.clientX))
+    if (!drag.active) return
+    const r = ratioFrom(e.clientX)
+    if (r !== null) onSeek(r)
   })
   const end = () => {
     drag.active = false

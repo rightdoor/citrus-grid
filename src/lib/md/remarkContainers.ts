@@ -129,8 +129,14 @@ export function remarkContainers() {
           k++
         }
         const merged = mergeLineRuns(body)
-        if (closed) out.push({ kind: 'block', node: makeContainer(type, title, merged) })
-        else out.push(...(merged.map((node) => ({ kind: 'block', node })) as QueueItem[]))
+        if (closed) {
+          out.push({ kind: 'block', node: makeContainer(type, title, merged) })
+        } else {
+          // 未闭合：opener 行按普通文本保留（与未知 :::foo 类型的行为一致），
+          // 不能静默吞掉，否则作者看不到自己的容器语法为什么没生效
+          out.push(item)
+          out.push(...(merged.map((node) => ({ kind: 'block', node })) as QueueItem[]))
+        }
         continue
       }
       out.push(item)
