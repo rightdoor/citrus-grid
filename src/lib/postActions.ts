@@ -59,8 +59,8 @@ interface CopyWindow {
 export function bindCopyCode() {
   const w = window as unknown as CopyWindow
   w.__blogCopyCode = (btn: HTMLElement) => {
-    const block = btn.closest('.code-block')
-    const code = block?.querySelector('code')
+    const block = btn.closest('.code-block, .diff-view')
+    const code = block?.querySelector('code, .diff-view-lines')
     if (!code) return
     const text = code.textContent || ''
     const done = () => {

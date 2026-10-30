@@ -194,21 +194,33 @@ print("Hello, World!")
 print("Hello, World!")
 ```
 
-### diff 高亮
+### 差异对比（diff）
+
+差异对比使用独立的 `:::diff` 容器语法，内容按原文原样渲染，不经过 Markdown 解析（`+`/`-` 开头的行不会被误认为列表）。容器名后可附标题（如文件名）：
 
 ````markdown
-```diff
-+ 新增的行
-- 删除的行
-```
+:::diff greet.ts
+@@ -8,4 +8,5 @@ function greet(name) {
+  const prefix = '你好'
+-  const message = prefix + name
++  const message = `${prefix}, ${name}!`
++  console.log(message)
+  return message
+}
+:::
 ````
 
-效果：
+效果（参考 VSCode 差异视图：整行红绿底色、`+/-` 符号列、行内词级高亮）：
 
-```diff
-+ 新增的行
-- 删除的行
-```
+:::diff greet.ts
+@@ -8,4 +8,5 @@ function greet(name) {
+  const prefix = '你好'
+-  const message = prefix + name
++  const message = `${prefix}, ${name}!`
++  console.log(message)
+  return message
+}
+:::
 
 注意：代码块自带行号、复制按钮与语言标识；支持 python / bash / go / rust / sql / diff 等常用语言，未知语言按纯文本渲染。请勿使用缩进4个空格或一个制表符来创建代码块，因为不会显示。
 

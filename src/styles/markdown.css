@@ -248,6 +248,148 @@
   white-space: pre;
 }
 
+/* :::diff 差异对比视图：独立于代码块的渲染结构（VSCode 风格） */
+.post-content .diff-view {
+  margin: 1.75em 0;
+  background: var(--wp-surface);
+  border: 1px solid var(--wp-border-light);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--wp-shadow-card);
+  contain: layout style paint;
+}
+.post-content .diff-view-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.5em 1em;
+  border-bottom: 1px solid var(--wp-border-light);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--wp-diff-add) 8%, transparent),
+    color-mix(in srgb, var(--wp-diff-del) 8%, transparent)
+  );
+}
+.post-content .diff-view-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--wp-text-secondary);
+  user-select: none;
+}
+.post-content .diff-view-title svg {
+  font-size: 1rem;
+  opacity: 0.85;
+}
+.post-content .diff-view-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  user-select: none;
+}
+.post-content .diff-view-stat-add {
+  color: var(--wp-diff-add);
+  font-weight: 700;
+}
+.post-content .diff-view-stat-del {
+  color: var(--wp-diff-del);
+  font-weight: 700;
+}
+.post-content .diff-view-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--wp-text-secondary);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s;
+}
+.post-content .diff-view-copy svg {
+  font-size: 0.85rem;
+}
+.post-content .diff-view-copy:hover {
+  color: var(--wp-accent);
+  border-color: var(--wp-border);
+  background: var(--wp-surface);
+}
+.post-content .diff-view-copy.is-success {
+  color: var(--wp-syntax-string);
+}
+.post-content .diff-view-copy.is-success svg {
+  color: var(--wp-syntax-string);
+}
+.post-content .diff-view-body {
+  --code-font-size: 0.85rem;
+  --code-line-height: 1.7;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--code-font-size);
+  line-height: var(--code-line-height);
+  color: var(--wp-text);
+}
+.post-content .diff-view-lines {
+  padding: 0.75em 0;
+  white-space: pre;
+}
+.post-content .diff-view-line {
+  display: block;
+  min-height: calc(var(--code-font-size) * var(--code-line-height));
+  padding: 0 1.25em 0 1em;
+}
+.post-content .diff-view-line-add {
+  background: var(--wp-diff-add-line);
+}
+.post-content .diff-view-line-del {
+  background: var(--wp-diff-del-line);
+}
+.post-content .diff-view-sign {
+  display: inline-block;
+  width: 1.1em;
+  margin-right: 0.6em;
+  text-align: center;
+  user-select: none;
+}
+.post-content .diff-view-line-add > .diff-view-sign {
+  color: var(--wp-diff-add);
+  font-weight: 700;
+}
+.post-content .diff-view-line-del > .diff-view-sign {
+  color: var(--wp-diff-del);
+  font-weight: 700;
+}
+.post-content .diff-view-line-meta > .diff-view-sign {
+  color: var(--wp-diff-meta);
+}
+.post-content .diff-view-line-meta > .diff-view-text {
+  color: var(--wp-diff-meta);
+}
+.post-content .diff-view-word-add {
+  background: var(--wp-diff-add-word);
+  border-radius: 2px;
+}
+.post-content .diff-view-word-del {
+  background: var(--wp-diff-del-word);
+  border-radius: 2px;
+}
+.post-content .diff-view-nl {
+  display: none;
+}
+
 .post-content pre:not(.code-pre) {
   background: var(--wp-code-bg);
   border: 1px solid var(--wp-border-light);

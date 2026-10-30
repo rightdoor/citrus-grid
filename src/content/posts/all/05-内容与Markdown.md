@@ -381,7 +381,7 @@ const CONTAINER_TYPES = new Set(['info', 'tip', 'warning', 'danger', 'details', 
 | `go` | Go |
 | `rust` | Rust |
 | `sql` | SQL |
-| `diff` | diff（`+`/`-` 行着色） |
+| `diff` | diff（`+`/`-` 着色；完整差异对比请用 `:::diff` 容器） |
 | `ini` | INI |
 | `toml` | TOML |
 

@@ -18,6 +18,7 @@ import { rehypeImages } from './rehypeImages'
 import { rehypeRelativeLinks } from './rehypeRelativeLinks'
 import { rehypeTableWrap } from './rehypeTableWrap'
 import { remarkContainers } from './remarkContainers'
+import { remarkDiff } from './remarkDiff'
 
 export interface RenderOptions {
   filePath?: string
@@ -31,6 +32,7 @@ function buildProcessor(site: string) {
     .use(remarkBreaks)
     .use(remarkEmoji)
     .use(remarkMath)
+    .use(remarkDiff)
     .use(remarkContainers)
     .use(remarkRehype, {
       allowDangerousHtml: true,
