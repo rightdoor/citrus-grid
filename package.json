@@ -12,6 +12,7 @@
     "type-check": "tsc --noEmit",
     "verify": "pnpm check && pnpm type-check && pnpm check-i18n && pnpm check-swup-ignore",
     "new-post": "node scripts/new-post.js",
+    "theme:update": "node scripts/theme-update.js",
     "check-i18n": "node scripts/check-i18n.js",
     "check-swup-ignore": "node scripts/check-swup-ignore.js",
     "format-post-meta": "node scripts/format-post-meta.js",

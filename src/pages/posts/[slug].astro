@@ -4,9 +4,9 @@ import { defaultLang } from '@/i18n/ui'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { loadBacklinks, resolveBacklinks } from '@/lib/backlinks'
 import { resolveContentImage } from '@/lib/contentImages'
+import { siteConfig } from '@/lib/mergedSiteConfig'
 import { getPublishedPosts, type Post, seriesOf, sortSeriesPosts } from '@/lib/posts'
 import { relatedPostsOf } from '@/lib/relatedPosts'
-import { siteConfig } from '@/site.config'
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts()

@@ -78,6 +78,10 @@
 - [Astro 部署指南](https://docs.astro.build/guides/deploy/)
 - 网页部署请使用 `pnpm build` 命令构建网站，随后将 `dist` 目录部署至目标平台。
 
+### 主题升级
+
+二次开发用户升级主题：预演 `pnpm theme:update` 看报告，确认后 `pnpm theme:update --apply` 一键合并上游（用户层冲突自动保留你的版本，只读层冲突列出清单供人工处理）。定制白名单契约与完整流程见 [UPGRADING.md](UPGRADING.md)。
+
 ## 配置说明
 
 详细内容请查看配置文件 [site.config.ts](src/site.config.ts)。
@@ -133,6 +137,7 @@ draft: false
 | `pnpm check-swup-ignore` | 校验 `shouldIgnoreSwup` 内联正则与 `ASSET_EXT_RE` / `RESERVED_PATH_RE` 常量一致 |
 | `pnpm verify` | 依次执行 `astro check`、`tsc --noEmit`、`check-i18n`、`check-swup-ignore`，任一失败即中断 |
 | `pnpm new-post [slug] [--mdx]` | 新建文章模板 `src/content/posts/<slug>.md`；带 `--mdx` 时改为生成带 Callout 导入的 `.mdx` 模板（省略 slug 时按当天日期命名） |
+| `pnpm theme:update [--apply]` | 从上游（GitHub `main` 分支）同步主题更新；默认预演只出报告，`--apply` 实际合并，见 [UPGRADING.md](UPGRADING.md) |
 | `pnpm format-post-meta` | 统一重排所有文章 frontmatter 字段顺序 |
 | `pnpm format` | Biome 格式化 `src` |
 | `pnpm format:all` | Biome 检查并修复全项目代码（src、scripts、根目录配置文件） |

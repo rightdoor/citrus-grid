@@ -1,4 +1,4 @@
-import { siteConfig } from '@/site.config'
+import { siteConfig } from '@/lib/mergedSiteConfig'
 
 export type Lang = 'zh' | 'ja' | 'en'
 

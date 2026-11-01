@@ -24,8 +24,8 @@ import { rehypeRelativeLinks } from './src/lib/md/rehypeRelativeLinks.ts'
 import { rehypeTableWrap } from './src/lib/md/rehypeTableWrap.ts'
 import { remarkContainers } from './src/lib/md/remarkContainers.ts'
 import { remarkDiff } from './src/lib/md/remarkDiff.ts'
+import { siteConfig } from './src/lib/mergedSiteConfig.ts'
 import { shouldIgnoreSwup } from './src/lib/url.ts'
-import { siteConfig } from './src/site.config.ts'
 
 const site = siteConfig.url
 

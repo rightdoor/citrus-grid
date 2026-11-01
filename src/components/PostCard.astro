@@ -3,8 +3,8 @@ import '@/styles/PostCard.css'
 import Icon from '@/components/Icon.astro'
 import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
 import { mdiAccountOutline, mdiCalendarOutline, mdiEye, mdiLayers, mdiUpdate } from '@/lib/icons'
+import { siteConfig } from '@/lib/mergedSiteConfig'
 import { excerptOf, formatDate, type Post, readMinutes, seriesOf, wordCount } from '@/lib/posts'
-import { siteConfig } from '@/site.config'
 
 interface Props {
   lang?: Lang
