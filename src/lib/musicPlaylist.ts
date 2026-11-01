@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs'
 import path from 'node:path'
-import type { MusicTrack } from '@/site.config'
+import type { MusicTrack } from '@/lib/mergedSiteConfig'
 
 const AUDIO_EXTS = new Set(['.flac', '.mp3', '.m4a', '.ogg', '.wav', '.opus', '.aac', '.webm'])
 

@@ -8,7 +8,7 @@ import SearchModal from '@/components/SearchModal.astro'
 import SiteFooter from '@/components/SiteFooter.astro'
 import SiteHeader from '@/components/SiteHeader.astro'
 import { defaultLang, type Lang } from '@/i18n/ui'
-import { siteConfig } from '@/site.config'
+import { siteConfig } from '@/lib/mergedSiteConfig'
 
 interface Props {
   title?: string

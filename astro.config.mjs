@@ -23,8 +23,9 @@ import { rehypeRawToElements } from './src/lib/md/rehypeRawToElements.ts'
 import { rehypeRelativeLinks } from './src/lib/md/rehypeRelativeLinks.ts'
 import { rehypeTableWrap } from './src/lib/md/rehypeTableWrap.ts'
 import { remarkContainers } from './src/lib/md/remarkContainers.ts'
+import { remarkDiff } from './src/lib/md/remarkDiff.ts'
+import { siteConfig } from './src/lib/mergedSiteConfig.ts'
 import { shouldIgnoreSwup } from './src/lib/url.ts'
-import { siteConfig } from './src/site.config.ts'
 
 const site = siteConfig.url
 
@@ -44,7 +45,7 @@ export default defineConfig({
       gfm: true,
       smartypants: false,
       remarkRehype: { footnoteLabel, clobberPrefix: 'post-' },
-      remarkPlugins: [remarkBreaks, remarkEmoji, remarkMath, remarkContainers],
+      remarkPlugins: [remarkBreaks, remarkEmoji, remarkMath, remarkDiff, remarkContainers],
       rehypePlugins: [
         rehypeKatex,
         rehypeCodeBlock,

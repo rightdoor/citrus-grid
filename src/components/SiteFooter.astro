@@ -2,8 +2,8 @@
 import Icon from '@/components/Icon.astro'
 import { defaultLang, type Lang, localePath, useTranslations } from '@/i18n/ui'
 import { mdiRss, mdiSitemap } from '@/lib/icons'
+import { siteConfig } from '@/lib/mergedSiteConfig'
 import { getPublishedPosts } from '@/lib/posts'
-import { siteConfig } from '@/site.config'
 
 interface Props {
   lang?: Lang

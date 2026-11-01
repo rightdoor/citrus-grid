@@ -3,8 +3,8 @@ import mdxRenderer from '@astrojs/mdx/server.js'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { defaultLang } from '@/i18n/ui'
 import { renderMarkdownHtml } from '@/lib/md/pipeline'
+import { siteConfig } from '@/lib/mergedSiteConfig'
 import { getPublishedPosts, type Post } from '@/lib/posts'
-import { siteConfig } from '@/site.config'
 
 let mdxContainer: AstroContainer | null = null
 

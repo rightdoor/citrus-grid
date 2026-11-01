@@ -2,8 +2,8 @@
 import HomePage from '@/components/views/HomePage.astro'
 import { defaultLang, localePath } from '@/i18n/ui'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import { siteConfig } from '@/lib/mergedSiteConfig'
 import { getPublishedPosts } from '@/lib/posts'
-import { siteConfig } from '@/site.config'
 
 const lang = defaultLang
 const all = await getPublishedPosts()

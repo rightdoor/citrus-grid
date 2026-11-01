@@ -46,6 +46,11 @@
   --wp-syntax-regexp: #a34e31;
   --wp-diff-del: #a94442;
   --wp-diff-add: #376c37;
+  --wp-diff-add-line: rgba(155, 185, 85, 0.22);
+  --wp-diff-add-word: rgba(155, 185, 85, 0.45);
+  --wp-diff-del-line: rgba(173, 7, 7, 0.12);
+  --wp-diff-del-word: rgba(173, 7, 7, 0.24);
+  --wp-diff-meta: #3f6fa3;
 }
 
 .dark {
@@ -86,6 +91,11 @@
   --wp-syntax-regexp: #e08060;
   --wp-diff-del: #d48a85;
   --wp-diff-add: #94c086;
+  --wp-diff-add-line: rgba(148, 192, 134, 0.13);
+  --wp-diff-add-word: rgba(148, 192, 134, 0.28);
+  --wp-diff-del-line: rgba(226, 97, 89, 0.13);
+  --wp-diff-del-word: rgba(226, 97, 89, 0.26);
+  --wp-diff-meta: #7fa8ce;
   --wp-info-title: #7fa8ce;
   --wp-tip-title: #8fb078;
   --wp-warn-title: #d4a94e;
