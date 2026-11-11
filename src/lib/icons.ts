@@ -10,6 +10,8 @@ export const mdiArrowLeft = 'M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.0
 export const mdiArrowUp = 'M13,20H11V8L5.5,13.5L4.08,12.08L12,4.16L19.92,12.08L18.5,13.5L13,8V20Z'
 export const mdiBash =
   'M5 9H7.31L7.63 6H9.63L9.31 9H11.31L11.63 6H13.63L13.31 9H15V11H13.1L12.9 13H15V15H12.69L12.37 18H10.37L10.69 15H8.69L8.37 18H6.37L6.69 15H5V13H6.9L7.1 11H5V9M9.1 11L8.9 13H10.9L11.1 11M19 6H17V14H19M19 16H17V18H19Z'
+export const mdiWrap =
+  'M21,5H3V7H21V5M3,19H10V17H3V19M3,13H18C19,13 20,13.43 20,15C20,16.57 19,17 18,17H16V15L12,18L16,21V19H18C20.95,19 22,17.73 22,15C22,12.28 21,11 18,11H3V13Z'
 export const mdiBookOpen =
   'M13,12H20V13.5H13M13,9.5H20V11H13M13,14.5H20V16H13M21,4H3A2,2 0 0,0 1,6V19A2,2 0 0,0 3,21H21A2,2 0 0,0 23,19V6A2,2 0 0,0 21,4M21,19H12V6H21'
 export const mdiCalendarOutline =
@@ -139,6 +141,7 @@ export const icons = {
   'mdi-bash': mdiBash,
   'mdi-book-open': mdiBookOpen,
   'mdi-calendar-outline': mdiCalendarOutline,
+  'mdi-wrap': mdiWrap,
   'mdi-check': mdiCheck,
   'mdi-chevron-left': mdiChevronLeft,
   'mdi-chevron-right': mdiChevronRight,

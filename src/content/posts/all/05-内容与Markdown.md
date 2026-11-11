@@ -189,7 +189,7 @@ loader 的 `pattern: '**/*.{md,mdx}'` 会递归扫描。相对链接的解析也
 | 链接 | ✅ | 原生 + `rehypeExternalLinks` | 站外链接自动 `target="_blank"`（按 host 判断，同 host 不加） |
 | 图片 | ✅ | `rehypeImages` | 包 `.img-frame` + `a.img-lightbox`；首图 eager，其余 lazy；注入 LQIP 渐变与 `width`/`height`（防布局位移） |
 | 引用块 `>` | ✅ | 原生 | 左侧 3px 主题色边框 + 4% 主题色底 |
-| 行内代码 / 代码块 | ✅ | `rehypeCodeBlock`（Prism） | 带语言图标、行号、复制按钮；19 个 Prism 语法组件 |
+| 行内代码 / 代码块 | ✅ | `rehypeCodeBlock`（Prism） | 头部栏带语言图标、换行切换与复制按钮：默认不换行横向滚动，点换行按钮后折行并隐藏行号栏（行号会与折行错位）；19 个 Prism 语法组件 |
 | 水平线 | ✅ | 原生 | `---` / `***` / `___` |
 | 脚注 | ✅ | GFM + `remarkRehype` | id 前缀为 `post-`（不是默认的 `user-content-`） |
 | 数学公式 | ✅ | `remarkMath` + `rehypeKatex` | 行内 `$…$`、块级 `$$…$$`；KaTeX 的 CSS 按需加载（见下） |

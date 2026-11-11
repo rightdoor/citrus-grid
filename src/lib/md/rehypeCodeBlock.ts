@@ -107,7 +107,9 @@ function renderCodeBlockHtml(code: string, rawLang: string) {
   const langLabel = rawLang || 'text'
   const langClass = normalized ? `language-${normalized}` : 'language-text'
   const lineNumbers = buildLineNumbers(code)
-  return `<div class="code-block"><div class="code-header"><span class="code-lang">${iconSvg(langIcon(rawLang))}${escapeAttr(langLabel)}</span><button class="code-copy" type="button" onclick="window.__blogCopyCode(this)">${iconSvg('mdi-content-copy')}<span>复制</span></button></div><div class="code-body"><div class="code-gutter">${lineNumbers}</div><pre class="code-pre"><code class="${langClass}">${highlighted}</code></pre></div></div>`
+  // 头部右侧动作区：换行切换 + 复制；换行默认关，勾选后 code-pre 折行并隐藏行号栏
+  // （换行时长代码行占多行视觉行，行号会错位，故隐藏）；文案由 i18n 注入，见 postActions
+  return `<div class="code-block"><div class="code-header"><span class="code-lang">${iconSvg(langIcon(rawLang))}${escapeAttr(langLabel)}</span><div class="code-actions"><button class="code-wrap" type="button" aria-pressed="false" onclick="window.__blogToggleCodeWrap(this)">${iconSvg('mdi-wrap')}</button><button class="code-copy" type="button" onclick="window.__blogCopyCode(this)">${iconSvg('mdi-content-copy')}<span>复制</span></button></div></div><div class="code-body"><div class="code-gutter">${lineNumbers}</div><pre class="code-pre"><code class="${langClass}">${highlighted}</code></pre></div></div>`
 }
 
 function extractLang(code: Element): string {

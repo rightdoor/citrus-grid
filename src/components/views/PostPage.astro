@@ -78,6 +78,11 @@ const tableLabels = {
   scroll: t('post.tableScroll'),
   aria: t('post.tableToggleAria'),
 }
+const codeWrapLabels = {
+  wrap: t('post.codeWrap'),
+  unwrap: t('post.codeUnwrap'),
+  aria: t('post.codeWrapAria'),
+}
 const visitorsUnit = t('post.visitorsUnit')
 const { Content, headings } = await render(post)
 const hasToc = headings.length > 0
@@ -371,15 +376,16 @@ const postYear = post.data.published.getUTCFullYear()
   }
 </div>
 
-<script is:inline define:vars={{ copyIdleHtml, copyDoneHtml, tableLabels }}>
+<script is:inline define:vars={{ copyIdleHtml, copyDoneHtml, tableLabels, codeWrapLabels }}>
   window.__blogCopyIdleHtml = copyIdleHtml
   window.__blogCopyDoneHtml = copyDoneHtml
   window.__blogTableLabels = tableLabels
+  window.__blogCodeWrapLabels = codeWrapLabels
 </script>
 <script>
   import { onPageLoad } from '@/lib/pageLifecycle'
   import { initPhotoswipe } from '@/lib/photoswipe'
-  import { bindCopyCode, bindPostBodyAnchors } from '@/lib/postActions'
+  import { bindCodeWrapLabels, bindCopyCode, bindPostBodyAnchors } from '@/lib/postActions'
   import { initImageFrames, bindTableModes, initReadingReveal } from '@/lib/postContent'
   import { initToc } from '@/lib/postToc'
 
@@ -407,6 +413,7 @@ const postYear = post.data.published.getUTCFullYear()
   function initPage() {
     loadKatexStyles().catch(() => {})
     bindTableModes()
+    bindCodeWrapLabels()
     initToc()
 
     const postBody = document.querySelector<HTMLElement>('.post-content')

@@ -173,7 +173,13 @@
   font-size: 1rem;
   opacity: 0.85;
 }
-.post-content .code-copy {
+.post-content .code-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.post-content .code-copy,
+.post-content .code-wrap {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -189,13 +195,18 @@
     background 0.2s,
     border-color 0.2s;
 }
-.post-content .code-copy svg {
+.post-content .code-copy svg,
+.post-content .code-wrap svg {
   font-size: 0.85rem;
 }
-.post-content .code-copy:hover {
+.post-content .code-copy:hover,
+.post-content .code-wrap:hover {
   color: var(--wp-accent);
   border-color: var(--wp-border);
   background: var(--wp-surface);
+}
+.post-content .code-wrap[aria-pressed="true"] {
+  color: var(--wp-accent);
 }
 .post-content .code-copy.is-success {
   color: var(--wp-syntax-string);
@@ -246,6 +257,14 @@
   line-height: inherit;
   color: var(--wp-text);
   white-space: pre;
+}
+/* 换行模式（code-wrap 开关）：长行折行，行号栏隐藏（行号会与折行后的视觉行错位） */
+.post-content .code-block.is-wrapped .code-pre code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.post-content .code-block.is-wrapped .code-gutter {
+  display: none;
 }
 
 /* :::diff 差异对比视图：独立于代码块的渲染结构（VSCode 风格） */

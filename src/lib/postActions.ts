@@ -54,6 +54,17 @@ interface CopyWindow {
   __blogCopyIdleHtml?: string
   __blogCopyDoneHtml?: string
   __blogCopyCode?: (btn: HTMLElement) => void
+  __blogToggleCodeWrap?: (btn: HTMLElement) => void
+  __blogCodeWrapLabels?: { wrap: string; unwrap: string; aria: string }
+}
+
+// 换行 / 不换行切换：切换 code-block 的 is-wrapped 类（样式见 markdown.css：
+// 折行时长代码行占多个视觉行，行号会错位，故同时隐藏行号栏）
+function applyCodeWrapState(btn: HTMLElement, on: boolean) {
+  const w = window as unknown as CopyWindow
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false')
+  const labels = w.__blogCodeWrapLabels
+  if (labels) btn.title = on ? labels.unwrap : labels.wrap
 }
 
 export function bindCopyCode() {
@@ -84,6 +95,23 @@ export function bindCopyCode() {
       done()
     }
   }
+  w.__blogToggleCodeWrap = (btn: HTMLElement) => {
+    const block = btn.closest('.code-block')
+    if (!block) return
+    applyCodeWrapState(btn, block.classList.toggle('is-wrapped'))
+  }
+}
+
+// 代码块换行按钮的 aria-label 与初始提示文案由 PostPage 注入 i18n 后回填
+export function bindCodeWrapLabels() {
+  const w = window as unknown as CopyWindow
+  const labels = w.__blogCodeWrapLabels
+  if (!labels) return
+  document.querySelectorAll<HTMLElement>('.code-wrap').forEach((btn) => {
+    btn.setAttribute('aria-label', labels.aria)
+    const on = !!btn.closest('.code-block')?.classList.contains('is-wrapped')
+    applyCodeWrapState(btn, on)
+  })
 }
 
 export function bindPostBodyAnchors(postBody: HTMLElement) {
