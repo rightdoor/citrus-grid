@@ -13,6 +13,10 @@
     "switchToLight": "ライトモードに切り替え",
     "switchToDark": "ダークモードに切り替え"
   },
+  "reading": {
+    "enter": "読書モード",
+    "exit": "読書モードを終了（Esc）"
+  },
   "search": {
     "title": "記事を検索",
     "placeholder": "タイトル・カテゴリー・タグで検索…",

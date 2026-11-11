@@ -13,6 +13,10 @@
     "switchToLight": "切换到亮色模式",
     "switchToDark": "切换到暗色模式"
   },
+  "reading": {
+    "enter": "纯净阅读",
+    "exit": "退出纯净阅读（Esc）"
+  },
   "search": {
     "title": "搜索文章",
     "placeholder": "输入标题、分类或标签…",

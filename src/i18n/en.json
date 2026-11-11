@@ -13,6 +13,10 @@
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode"
   },
+  "reading": {
+    "enter": "Reading mode",
+    "exit": "Exit reading mode (Esc)"
+  },
   "search": {
     "title": "Search posts",
     "placeholder": "Search by title, category or tag…",

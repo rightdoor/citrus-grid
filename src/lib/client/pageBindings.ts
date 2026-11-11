@@ -60,7 +60,8 @@ export function bindControlClicks() {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
     const menuBtn = target.closest('[data-scroll-menu]')
-    if (menuBtn) {
+    // 纯净阅读模式下触发器已变身为退出按钮，交给 pureReading.ts 处理，不再展开菜单
+    if (menuBtn && !document.documentElement.classList.contains('pure-reading')) {
       setSideMenuOpen(!scrollControlNav?.classList.contains('is-open'))
     }
     const searchBtn = target.closest('[data-open-search]')

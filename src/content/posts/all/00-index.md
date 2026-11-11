@@ -69,6 +69,7 @@ Markdown / MDX 文章 (src/content/posts/*.{md,mdx})
 | 在文章里用 MDX 写表达式 / JSX / 组件 | [05-内容与Markdown.md#4.1](./05-内容与Markdown.md#41-mdxmdx文章支持) |
 | 改代码块的语言图标 / 行号 | [05-内容与Markdown.md#6](./05-内容与Markdown.md#6-代码块实现与可调参数) |
 | 加一个自定义图标 | [02-组件说明.md#4A](./02-组件说明.md#4a-图标系统srclibiconsts) |
+| 纯净阅读：增删要隐藏的组件 | [09-常见改造与排错.md#16](./09-常见改造与排错.md#16-纯净阅读模式增删要隐藏的组件) |
 | 部署到 Cloudflare Pages 等静态托管 | [06-构建与脚本.md#9](./06-构建与脚本.md#9-部署) |
 
 ## 四、改动前的三条硬规则

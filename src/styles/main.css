@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./markdown.css";
+@import "./pure-reading.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 

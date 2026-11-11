@@ -167,6 +167,7 @@ pnnpm type-check
 - [x] Article relative links auto conversion
 - [x] Music player component
 - [x] Bottom-left pet (gaze follow / blink / sleep, switchable in the config)
+- [x] Pure reading mode (toggle from the bottom-right menu on a post page to hide header / TOC / comments and other chrome; leaves the page or press Esc to exit)
 
 ## Plugins
 

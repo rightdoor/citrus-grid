@@ -2,6 +2,7 @@ import { initGridTrail } from './gridTrail'
 import { bindControlClicks, bindScrollControls, bindTocFab, initPageFlags } from './pageBindings'
 import { initPet } from './pet'
 import { bindProfileCardAnim } from './profileCardAnim'
+import { bindPureReading } from './pureReading'
 import {
   bindCrossPageAnchors,
   bindNavStartSync,
@@ -24,3 +25,4 @@ bindPetToSwup()
 bindSwapHooks()
 bindCrossPageAnchors()
 bindControlClicks()
+bindPureReading()
