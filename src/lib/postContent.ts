@@ -22,6 +22,31 @@ export function initImageFrames() {
     })
 }
 
+interface TableLabels {
+  wrap: string
+  scroll: string
+  aria: string
+}
+
+// 表格表头栏的 i18n 文案与可访问名称由 PostPage 注入（与代码块复制按钮同款模式），
+// 这里按开关状态回填右侧状态文案，并补上 checkbox 的 aria-label。
+// 开关本身的换行 / 滚动切换是纯 CSS（:has），本函数不参与行为。
+export function bindTableModes() {
+  const labels = (window as unknown as { __blogTableLabels?: TableLabels }).__blogTableLabels
+  if (!labels) return
+  document.querySelectorAll('.md-table').forEach((table) => {
+    const input = table.querySelector<HTMLInputElement>('.md-table-toggle')
+    const state = table.querySelector<HTMLElement>('.md-table-state')
+    if (!input || !state) return
+    input.setAttribute('aria-label', labels.aria)
+    const apply = () => {
+      state.textContent = input.checked ? labels.scroll : labels.wrap
+    }
+    apply()
+    input.addEventListener('change', apply)
+  })
+}
+
 export function initReadingReveal() {
   const body = document.querySelector<HTMLElement>('.post-content')
   if (!body) return

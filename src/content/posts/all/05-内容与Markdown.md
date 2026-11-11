@@ -185,7 +185,7 @@ loader 的 `pattern: '**/*.{md,mdx}'` 会递归扫描。相对链接的解析也
 | 强调 / 粗体 / 删除线 | ✅ | GFM | `~单波浪删除线~` 也支持 |
 | 无序 / 有序列表 | ✅ | GFM | — |
 | 任务列表 | ✅ | GFM | `accent-color: var(--wp-accent)` |
-| 表格 | ✅ | GFM + `rehypeTableWrap` | 外包 `.table-wrapper` 支持横向滚动；首列 `white-space: nowrap` |
+| 表格 | ✅ | GFM + `rehypeTableWrap` | 包成 `figure.md-table`（表头栏 + 表体）：左侧开关切换「换行显示 / 横向滚动」，默认换行、勾选后表体容器出横向滚动条；交互纯 CSS（`:has()`），状态文案与 aria-label 由 `postContent.ts` 的 `bindTableModes()` 注入 i18n |
 | 链接 | ✅ | 原生 + `rehypeExternalLinks` | 站外链接自动 `target="_blank"`（按 host 判断，同 host 不加） |
 | 图片 | ✅ | `rehypeImages` | 包 `.img-frame` + `a.img-lightbox`；首图 eager，其余 lazy；注入 LQIP 渐变与 `width`/`height`（防布局位移） |
 | 引用块 `>` | ✅ | 原生 | 左侧 3px 主题色边框 + 4% 主题色底 |

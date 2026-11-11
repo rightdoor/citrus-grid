@@ -73,6 +73,11 @@ const statsPath = `/posts/${post.id}`
 
 const copyIdleHtml = `${iconSvg('mdi-content-copy')}<span>${t('post.copy')}</span>`
 const copyDoneHtml = `${iconSvg('mdi-check')}<span>${t('post.copied')}</span>`
+const tableLabels = {
+  wrap: t('post.tableWrap'),
+  scroll: t('post.tableScroll'),
+  aria: t('post.tableToggleAria'),
+}
 const visitorsUnit = t('post.visitorsUnit')
 const { Content, headings } = await render(post)
 const hasToc = headings.length > 0
@@ -366,15 +371,16 @@ const postYear = post.data.published.getUTCFullYear()
   }
 </div>
 
-<script is:inline define:vars={{ copyIdleHtml, copyDoneHtml }}>
+<script is:inline define:vars={{ copyIdleHtml, copyDoneHtml, tableLabels }}>
   window.__blogCopyIdleHtml = copyIdleHtml
   window.__blogCopyDoneHtml = copyDoneHtml
+  window.__blogTableLabels = tableLabels
 </script>
 <script>
   import { onPageLoad } from '@/lib/pageLifecycle'
   import { initPhotoswipe } from '@/lib/photoswipe'
   import { bindCopyCode, bindPostBodyAnchors } from '@/lib/postActions'
-  import { initImageFrames, initReadingReveal } from '@/lib/postContent'
+  import { initImageFrames, bindTableModes, initReadingReveal } from '@/lib/postContent'
   import { initToc } from '@/lib/postToc'
 
   bindCopyCode()
@@ -400,6 +406,7 @@ const postYear = post.data.published.getUTCFullYear()
 
   function initPage() {
     loadKatexStyles().catch(() => {})
+    bindTableModes()
     initToc()
 
     const postBody = document.querySelector<HTMLElement>('.post-content')

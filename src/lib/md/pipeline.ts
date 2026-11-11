@@ -26,33 +26,36 @@ export interface RenderOptions {
 }
 
 function buildProcessor(site: string) {
-  return unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkBreaks)
-    .use(remarkEmoji)
-    .use(remarkMath)
-    .use(remarkDiff)
-    .use(remarkContainers)
-    .use(remarkRehype, {
-      allowDangerousHtml: true,
-      footnoteLabel: 'footnote',
-      clobberPrefix: 'post-',
-    })
-    .use(rehypeKatex)
-    .use(rehypeCodeBlock)
-    .use(rehypeImages)
-    .use(rehypeRelativeLinks)
-    .use(rehypeTableWrap)
-    .use(rehypeExternalLinks, { site })
-    .use(rehypeSlug)
-    .use(rehypeAutolinkHeadings, {
-      behavior: 'append',
-      properties: { className: ['heading-anchor'], tabIndex: -1, ariaLabel: 'heading anchor' },
-      content: { type: 'element', tagName: 'span', properties: {}, children: [] },
-    } satisfies AutolinkOptions)
-    .use(rehypeRaw)
-    .use(rehypeStringify, { allowDangerousHtml: true })
+  return (
+    unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(remarkBreaks)
+      .use(remarkEmoji)
+      .use(remarkMath)
+      .use(remarkDiff)
+      .use(remarkContainers)
+      .use(remarkRehype, {
+        allowDangerousHtml: true,
+        footnoteLabel: 'footnote',
+        clobberPrefix: 'post-',
+      })
+      .use(rehypeKatex)
+      .use(rehypeCodeBlock)
+      .use(rehypeImages)
+      .use(rehypeRelativeLinks)
+      .use(rehypeExternalLinks, { site })
+      .use(rehypeSlug)
+      .use(rehypeAutolinkHeadings, {
+        behavior: 'append',
+        properties: { className: ['heading-anchor'], tabIndex: -1, ariaLabel: 'heading anchor' },
+        content: { type: 'element', tagName: 'span', properties: {}, children: [] },
+      } satisfies AutolinkOptions)
+      .use(rehypeRaw)
+      // 放在 rehypeRaw 之后：markdown 里手写的原生 <table> 也能包上表头栏
+      .use(rehypeTableWrap)
+      .use(rehypeStringify, { allowDangerousHtml: true })
+  )
 }
 
 // 每次调用重建完整 unified 管线的初始化开销可观（RSS 生成会对每篇文章调用一次），

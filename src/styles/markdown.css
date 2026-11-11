@@ -471,13 +471,16 @@
   font-weight: inherit;
 }
 
-.post-content .table-wrapper {
-  overflow-x: auto;
+/* ── 表格：表头栏（换行 / 横向滚动开关）+ 表体，结构见 lib/md/rehypeTableWrap.ts ── */
+.post-content .md-table {
   margin: 1.5em 0;
+  overflow: hidden;
+  border: 1px solid var(--wp-border);
+  border-radius: var(--radius-wp);
+  background: var(--wp-surface);
 }
 .post-content table {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
   border-collapse: collapse;
   font-size: 0.95rem;
   background: var(--wp-surface);
@@ -487,10 +490,23 @@
   padding: 0.6em 1em;
   border: 1px solid var(--wp-border);
   text-align: left;
+  overflow-wrap: anywhere;
 }
-.post-content th:first-child,
-.post-content td:first-child {
-  white-space: nowrap;
+/* 外框由 .md-table 提供，去掉表体外圈描边，避免叠加成 2px */
+.post-content .md-table tr:first-child th,
+.post-content .md-table tr:first-child td {
+  border-top: none;
+}
+.post-content .md-table tr:last-child td {
+  border-bottom: none;
+}
+.post-content .md-table th:first-child,
+.post-content .md-table td:first-child {
+  border-left: none;
+}
+.post-content .md-table th:last-child,
+.post-content .md-table td:last-child {
+  border-right: none;
 }
 .post-content th {
   background: var(--wp-code-bg);
@@ -506,6 +522,87 @@
 }
 .post-content tr:nth-child(even) {
   background: color-mix(in srgb, var(--wp-code-bg) 45%, var(--wp-surface));
+}
+
+/* 表头栏：左侧开关，右侧状态文案（由 bindTableModes 注入 i18n 文案） */
+.post-content .md-table-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75em;
+  padding: 0.4em 0.9em;
+  background: var(--wp-code-bg);
+  border-bottom: 1px solid var(--wp-border);
+  font-size: 0.78rem;
+  color: var(--wp-text-tertiary);
+}
+.post-content .md-table-state:empty {
+  display: none;
+}
+.post-content .md-table-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.post-content .md-table-toggle {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.post-content .md-table-slider {
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+  border-radius: 999px;
+  background: var(--wp-border);
+  transition: background 0.2s;
+}
+.post-content .md-table-slider::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  transition: transform 0.2s;
+}
+.post-content .md-table-toggle:checked + .md-table-slider {
+  background: var(--wp-accent);
+}
+.post-content .md-table-toggle:checked + .md-table-slider::after {
+  transform: translateX(13px);
+}
+.post-content .md-table-toggle:focus-visible + .md-table-slider {
+  outline: 2px solid var(--wp-accent);
+  outline-offset: 2px;
+}
+
+/* 表体容器：默认换行显示；勾选开关后使用横向滚动容器 */
+.post-content .md-table-wrap {
+  overflow-x: visible;
+}
+.post-content .md-table:has(.md-table-toggle:checked) .md-table-wrap {
+  overflow-x: auto;
+}
+.post-content .md-table:has(.md-table-toggle:checked) table {
+  width: max-content;
+  min-width: 100%;
+}
+.post-content .md-table:has(.md-table-toggle:checked) th:first-child,
+.post-content .md-table:has(.md-table-toggle:checked) td:first-child {
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-content .md-table-slider,
+  .post-content .md-table-slider::after {
+    transition: none;
+  }
 }
 
 .post-content .img-frame {
