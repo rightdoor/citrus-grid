@@ -114,9 +114,11 @@ draft: false
 
 | Command | Purpose |
 | --- | --- |
-| `pnpm dev` / `start` | Start development server |
+| `pnpm dev` / `start` | Start development server; validates the markdown pipeline fingerprint first |
 | `pnpm build` | Production build, then automatically injects `modulepreload`, minifies inline scripts, and runs `pagefind` to generate search index |
-| `pnpm build:fresh` | Clears the Astro caches (`.astro`, `node_modules/.astro`, `node_modules/.cache/jiti`) before building, for when a markdown plugin change does not show up on the page |
+| `pnpm build:fresh` | Force-clears the Astro caches (`.astro`, `node_modules/.astro`, `node_modules/.cache/jiti`) before building |
+
+> **Content cache**: the Astro content layer computes digests from article files only, so changes to plugins in `src/lib/md/` or the plugin order in `astro.config.mjs` do not invalidate already-rendered posts. Before every `dev` / `build`, `scripts/sync-md-cache.js` compares a pipeline fingerprint and clears the cache automatically when it changes; unchanged pipelines keep the incremental cache. `build:fresh` remains a manual escape hatch — if a long-running dev server was not restarted after a plugin edit, simply restart it, or use this command.
 | `pnpm preview` | Preview the `dist` build output |
 | `pnpm check` | Astro type checking (`astro check`) |
 | `pnpm type-check` | TypeScript type checking (`tsc --noEmit`, covers `src` and `scripts`) |

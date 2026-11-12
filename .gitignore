@@ -20,3 +20,6 @@ pnpm-debug.log*
 
 # macOS
 .DS_Store
+
+# WorkBuddy local agent memory (not project source)
+.workbuddy-ai/

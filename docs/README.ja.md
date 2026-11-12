@@ -114,9 +114,11 @@ draft: false
 
 | コマンド | 説明 |
 | --- | --- |
-| `pnpm dev` / `start` | 開発サーバーを起動します |
+| `pnpm dev` / `start` | 開発サーバーを起動します（起動前に markdown パイプラインのフィンガープリントを検証） |
 | `pnpm build` | 本番ビルドを実行し、その後 `modulepreload` を自動注入し、インラインスクリプトを圧縮し、`pagefind` を実行してサイト内検索インデックスを生成します |
-| `pnpm build:fresh` | Astro のキャッシュ（`.astro`、`node_modules/.astro`、`node_modules/.cache/jiti`）を削除してからビルドします。markdown プラグインを変更してもページに反映されない場合に使用します |
+| `pnpm build:fresh` | Astro のキャッシュ（`.astro`、`node_modules/.astro`、`node_modules/.cache/jiti`）を強制的に削除してからビルドします |
+
+> **コンテンツキャッシュについて**：Astro のコンテンツ層は記事ファイルの内容だけで digest を計算するため、`src/lib/md/` のプラグインや `astro.config.mjs` のプラグイン順序を変更しても、レンダリング済みの記事は無効化されません。`dev` / `build` の起動前に `scripts/sync-md-cache.js` がパイプラインのフィンガープリントを比較し、変更があればキャッシュを自動削除して全記事を再レンダリングします。変更がなければキャッシュを保持し、インクリメンタルビルドの速度は落ちません。`build:fresh` は手動の保険として残しています。プラグイン変更後に長時間起動中の dev サーバーを再起動していない場合は、再起動するかこのコマンドを使用してください。
 | `pnpm preview` | `dist` ビルド成果物をプレビューします |
 | `pnpm check` | Astro の型チェック（`astro check`）を実行します |
 | `pnpm type-check` | TypeScript の型チェック（`tsc --noEmit`、`src` と `scripts` を対象） |

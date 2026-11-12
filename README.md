@@ -127,9 +127,11 @@ draft: false
 
 | 命令 | 作用 |
 | --- | --- |
-| `pnpm dev` / `start` | 启动开发服务器 |
+| `pnpm dev` / `start` | 启动开发服务器；启动前自动校验 markdown 渲染管线指纹 |
 | `pnpm build` | 生产构建，随后自动注入 `modulepreload`、压缩内联脚本，并执行 `pagefind` 生成站内搜索索引 |
-| `pnpm build:fresh` | 先清 Astro 缓存（`.astro`、`node_modules/.astro`、`node_modules/.cache/jiti`）再构建，用于绕开缓存导致的「改了 markdown 插件但页面没变化」 |
+| `pnpm build:fresh` | 手动强制清 Astro 缓存（`.astro`、`node_modules/.astro`、`node_modules/.cache/jiti`）再构建 |
+
+> **关于内容缓存**：Astro 内容层只按文章文件内容计算 digest，修改 `src/lib/md/` 下的插件或 `astro.config.mjs` 的插件顺序不会让已渲染的文章失效。`dev` / `build` 启动前会由 `scripts/sync-md-cache.js` 比对渲染管线指纹，变化即自动清缓存并重新渲染全部文章；指纹未变则保留缓存，不损失增量速度。`build:fresh` 保留为手动强制兜底——若 dev server 长时间运行、改了插件却没重启，重启一次即可，必要时用它。
 | `pnpm preview` | 预览 `dist` 构建产物 |
 | `pnpm check` | Astro 类型检查（`astro check`） |
 | `pnpm type-check` | TypeScript 类型检查（`tsc --noEmit`，覆盖 `src` 与 `scripts`） |
@@ -180,7 +182,7 @@ pnpm type-check
 - [x] 阅读统计（已预留接口）
 - [x] 文章相对链接自动转换
 - [x] 表格表头栏（左侧开关切换换行显示 / 横向滚动，默认换行，构建期生成零 JS 交互）
-- [x] 代码块换行切换（头部按钮切换换行 / 不换行，折行时自动隐藏行号栏）
+- [x] 代码块换行切换（头部按钮切换换行 / 不换行；折行时保留行号栏，仅隐藏发生折行的那几行行号，其余行号仍逐行对齐）
 - [x] 音乐播放器组件
 - [x] 左下角宠物（视线跟随 / 眨眼 / 休眠，可在配置中开关）
 - [x] 纯净阅读模式（文章页右下角一键隐藏头部 / 侧栏 / 评论等外壳组件，专注正文，换页或 Esc 退出）

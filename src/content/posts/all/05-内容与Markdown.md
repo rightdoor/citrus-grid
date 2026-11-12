@@ -189,7 +189,7 @@ loader 的 `pattern: '**/*.{md,mdx}'` 会递归扫描。相对链接的解析也
 | 链接 | ✅ | 原生 + `rehypeExternalLinks` | 站外链接自动 `target="_blank"`（按 host 判断，同 host 不加） |
 | 图片 | ✅ | `rehypeImages` | 包 `.img-frame` + `a.img-lightbox`；首图 eager，其余 lazy；注入 LQIP 渐变与 `width`/`height`（防布局位移） |
 | 引用块 `>` | ✅ | 原生 | 左侧 3px 主题色边框 + 4% 主题色底 |
-| 行内代码 / 代码块 | ✅ | `rehypeCodeBlock`（Prism） | 头部栏带语言图标、换行切换与复制按钮：默认不换行横向滚动，点换行按钮后折行并隐藏行号栏（行号会与折行错位）；19 个 Prism 语法组件 |
+| 行内代码 / 代码块 | ✅ | `rehypeCodeBlock`（Prism） | 头部栏带语言图标、换行切换与复制按钮：默认不换行横向滚动；点换行按钮后按容器宽度折行，行号栏保留，仅发生折行的逻辑行隐藏自己的行号，其余行号由 `postActions.ts` 的 `syncWrappedGutter()` 按折行后实际高度逐行对齐（窗口变化会重算）；19 个 Prism 语法组件 |
 | 水平线 | ✅ | 原生 | `---` / `***` / `___` |
 | 脚注 | ✅ | GFM + `remarkRehype` | id 前缀为 `post-`（不是默认的 `user-content-`） |
 | 数学公式 | ✅ | `remarkMath` + `rehypeKatex` | 行内 `$…$`、块级 `$$…$$`；KaTeX 的 CSS 按需加载（见下） |
@@ -338,7 +338,7 @@ const CONTAINER_TYPES = new Set(['info', 'tip', 'warning', 'danger', 'details', 
 
 > 改 `remarkContainers` 后需要重启 dev
 >
-> 它在 `astro.config.mjs` 里被静态 import 进 markdown 处理器，改动后 Vite 不会热更新 markdown 配置，请重启 `pnpm dev`。
+> 它在 `astro.config.mjs` 里被静态 import 进 markdown 处理器，改动后 Vite 不会热更新 markdown 配置，请重启 `pnpm dev`。重启时 `scripts/sync-md-cache.js` 会比对渲染管线指纹并自动清掉 Astro 内容缓存，避免没改过的文章仍沿用插件改动前的 HTML（详见 [09-常见改造与排错.md](./09-常见改造与排错.md) 的 Q9）。
 
 ## 6. 代码块实现与可调参数
 
@@ -348,9 +348,10 @@ const CONTAINER_TYPES = new Set(['info', 'tip', 'warning', 'danger', 'details', 
 <div class="code-block">
   <div class="code-header">
     <span class="code-lang"><svg …/>python</span>
-    <button class="code-copy" type="button" onclick="window.__blogCopyCode(this)">
-      <svg …/><span>复制</span>
-    </button>
+    <div class="code-actions">
+      <button class="code-wrap" type="button" aria-pressed="false" onclick="window.__blogToggleCodeWrap(this)"><svg …/></button>
+      <button class="code-copy" type="button" onclick="window.__blogCopyCode(this)"><svg …/><span>复制</span></button>
+    </div>
   </div>
   <div class="code-body">
     <div class="code-gutter"><span>1</span><span>2</span>…</div>
@@ -358,6 +359,8 @@ const CONTAINER_TYPES = new Set(['info', 'tip', 'warning', 'danger', 'details', 
   </div>
 </div>
 ```
+
+> 头部动作区（`code-actions`）里换行按钮在复制按钮左侧。默认不换行、横向滚动；点开后 `code-pre code` 变 `pre-wrap` 按容器宽度折行，**行号栏保留**——`postActions.ts` 的 `syncWrappedGutter()` 会测量每个逻辑行折行后的实际高度，写回 `.code-gutter span` 的 `height`，并给发生折行的行加 `.is-folded` 隐藏其行号，未折行的行号仍逐行对齐。窗口宽度变化会重新测量。
 
 ### 6.2 支持的语言（Prism 语法）
 
@@ -452,6 +455,8 @@ function normalizeLanguage(raw) {
 | 代码行高 | 同上 `--code-line-height` | `1.7` |
 | 行号栏宽度 | `.code-gutter` 的 `min-width` | `2.8em` |
 | 是否显示行号 | 删掉 `rehypeCodeBlock.ts` 中 `buildLineNumbers()` 的调用与 `.code-gutter` 那段 HTML | 显示 |
+| 折行时行号的处理 | `markdown.css` 的 `.code-block.is-wrapped .code-gutter span.is-folded` | `visibility:hidden` 隐藏发生折行那几行的行号（行号栏本身保留） |
+| 行号与折行行对齐 | `postActions.ts` 的 `syncWrappedGutter()` | 镜像测量每个逻辑行折行后的实际高度，写回 `.code-gutter span` 的 `height`；窗口 resize 重算 |
 | 复制成功提示时长 | `PostPage.astro` 的 `setTimeout(..., 2000)` | 2000ms |
 | 代码块圆角 | `markdown.css` `.code-block { border-radius }` | `12px` |
 | 代码块头部背景 | `markdown.css` `.code-header { background }` | 亮色 `rgba(255,255,255,.35)` / 暗色 `rgba(255,255,255,.03)` |

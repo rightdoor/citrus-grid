@@ -258,13 +258,20 @@
   color: var(--wp-text);
   white-space: pre;
 }
-/* 换行模式（code-wrap 开关）：长行折行，行号栏隐藏（行号会与折行后的视觉行错位） */
+/* 换行模式（code-wrap 开关）：长行按容器宽度折行，行号栏保留。
+   发生折行的逻辑行，其行号隐藏（折行后行号与视觉行无法一一对应）；
+   postActions.syncWrappedGutter 会把每条行号的占位高度同步为该逻辑行
+   折行后的实际高度，保证未折行的行号仍与代码行逐行对齐。 */
+.post-content .code-block.is-wrapped .code-body {
+  overflow-x: hidden;
+}
 .post-content .code-block.is-wrapped .code-pre code {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
 }
-.post-content .code-block.is-wrapped .code-gutter {
-  display: none;
+.post-content .code-block.is-wrapped .code-gutter span.is-folded {
+  visibility: hidden;
 }
 
 /* :::diff 差异对比视图：独立于代码块的渲染结构（VSCode 风格） */
