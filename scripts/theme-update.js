@@ -10,13 +10,18 @@ import process from 'node:process'
 // - 只读层（components / layouts / lib / pages / 等主题代码）用户也改过时，
 //   保留冲突交由人工合并，脚本不擅自取舍。
 //
+// 上游默认指向官方仓库的 main 分支（见 DEFAULT_UPSTREAM）。
+// 二开用户的 origin 通常指向自己的 fork，不能作为默认上游；因此默认直接用 URL，
+// 并把 fetch 结果落到固定的本地 ref，完全不依赖用户本地的 remote 配置。
+//
 // 用法：
 //   pnpm theme:update            # 预演（默认）：只输出报告，不动工作区
 //   pnpm theme:update --apply    # 实际执行合并并自动解决用户层冲突
-//   pnpm theme:update --remote <name> --branch <name>
+//   pnpm theme:update --remote <name|url> --branch <name>
 
-const DEFAULT_REMOTE = 'origin'
+const DEFAULT_UPSTREAM = 'https://github.com/rightdoor/citrus-grid.git'
 const DEFAULT_BRANCH = 'main'
+const UPSTREAM_REF = 'refs/theme-update/upstream' // 固定本地跟踪 ref，fetch 结果落这里，不依赖用户 remote 配置
 const SITE_CONFIG = 'src/site.config.ts'
 const LIST_CAP = 40
 
@@ -36,7 +41,8 @@ const apply = args.includes('--apply')
 const help = args.includes('--help') || args.includes('-h')
 const remoteIdx = args.indexOf('--remote')
 const branchIdx = args.indexOf('--branch')
-const remote = remoteIdx !== -1 ? args[remoteIdx + 1] : DEFAULT_REMOTE
+// --remote 传的是 remote 名或仓库 URL；缺省时用官方仓库 URL，而非用户本地的 origin
+const remote = remoteIdx !== -1 ? args[remoteIdx + 1] : DEFAULT_UPSTREAM
 const branch = branchIdx !== -1 ? args[branchIdx + 1] : DEFAULT_BRANCH
 
 const PREFIX = '[theme:update]'
@@ -160,11 +166,11 @@ function listSection(title, items, emptyText) {
 }
 
 if (help) {
-  console.log(`用法：pnpm theme:update [--apply] [--remote <name>] [--branch <name>]
+  console.log(`用法：pnpm theme:update [--apply] [--remote <name|url>] [--branch <name>]
 
   默认预演（--dry-run 语义）：只输出报告，不改工作区。
   --apply    实际执行合并，自动解决用户层冲突（保留用户版本）。
-  --remote   上游 remote 名，默认 ${DEFAULT_REMOTE}（GitHub）
+  --remote   上游来源（remote 名或仓库 URL），默认 ${DEFAULT_UPSTREAM}
   --branch   上游分支名，默认 ${DEFAULT_BRANCH}`)
   process.exit(0)
 }
@@ -185,16 +191,19 @@ if (dirty.length > 0) {
   fail('refusing to run on a dirty tree')
 }
 
-const upstreamRef = `${remote}/${branch}`
+// 无论 --remote 传的是 URL 还是 remote 名，都把目标分支落到固定 ref UPSTREAM_REF，
+// 后续统一用它做 diff / merge-base / merge，避免依赖 origin/<branch> 这类本地跟踪引用。
+const upstreamRef = UPSTREAM_REF
+const upstreamLabel = `${remote}@${branch}`
 console.log(`${PREFIX} fetching ${remote} ${branch} ...`)
 try {
-  git(['fetch', remote, branch])
+  git(['fetch', remote, `+${branch}:${upstreamRef}`])
 } catch {
-  fail(`git fetch ${remote} ${branch} failed — check your network or the remote name`)
+  fail(`git fetch ${remote} ${branch} failed — check your network or the remote/URL`)
 }
 
 if (!gitOk(['rev-parse', '-q', '--verify', `${upstreamRef}^{commit}`])) {
-  fail(`upstream ref ${upstreamRef} not found`)
+  fail(`upstream ref ${upstreamLabel} not found`)
 }
 
 const head = git(['rev-parse', 'HEAD']).trim()
@@ -206,7 +215,7 @@ const upstreamVersion = packageVersionAt(upstreamRef)
 console.log(`${PREFIX} theme version: local v${localVersion} / upstream v${upstreamVersion}`)
 
 if (base === upstream) {
-  console.log(`${PREFIX} already up to date with ${upstreamRef}`)
+  console.log(`${PREFIX} already up to date with ${upstreamLabel}`)
   process.exit(0)
 }
 console.log(`${PREFIX} upstream has new commits since last merge base`)
@@ -276,7 +285,7 @@ if (!apply) {
 }
 
 // ── 执行合并 ────────────────────────────────────────────────
-console.log(`\n${PREFIX} merging ${upstreamRef} ...`)
+console.log(`\n${PREFIX} merging ${upstreamLabel} ...`)
 let mergeFailed = false
 try {
   git(['merge', '--no-commit', upstreamRef])
@@ -321,17 +330,17 @@ if (mergeFailed) {
   git([
     'commit',
     '-m',
-    `chore(theme): 同步上游 ${upstreamRef}（v${localVersion} → v${upstreamVersion}）`,
+    `chore(theme): 同步上游 ${upstreamLabel}（v${localVersion} → v${upstreamVersion}）`,
   ])
 } else if (gitOk(['rev-parse', '-q', '--verify', 'MERGE_HEAD'])) {
   git([
     'commit',
     '-m',
-    `chore(theme): 同步上游 ${upstreamRef}（v${localVersion} → v${upstreamVersion}）`,
+    `chore(theme): 同步上游 ${upstreamLabel}（v${localVersion} → v${upstreamVersion}）`,
   ])
 }
 
-console.log(`\n${PREFIX} 合并完成：${upstreamRef}（v${localVersion} → v${upstreamVersion}）`)
+console.log(`\n${PREFIX} 合并完成：${upstreamLabel}（v${localVersion} → v${upstreamVersion}）`)
 if (userLayerConflicts.length > 0) {
   console.log(
     `用户层双方都改过的文件已合并（冲突处保留你的版本，建议过目）：\n  ${userLayerConflicts.join('\n  ')}`,

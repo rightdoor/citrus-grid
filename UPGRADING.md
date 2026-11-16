@@ -52,7 +52,7 @@ pnpm install && pnpm verify # 3. 装依赖（如有新增）并跑检查
 
 退出码：`0` 成功；`3` 存在需人工处理的只读层冲突（工作区保留合并现场，处理后 `git add` + `git commit --no-edit`；放弃则 `git merge --abort`）。
 
-其他参数：`--remote <name>`、`--branch <name>`（默认 `origin` + `main`，即 GitHub）。
+其他参数：`--remote <name|url>`、`--branch <name>`。默认上游为官方仓库 `https://github.com/rightdoor/citrus-grid.git` 的 `main` 分支——不依赖你本地 `origin` 指向哪里（二开用户的 `origin` 通常是自己的 fork）；只有需要换用镜像或私有 fork 时才用 `--remote` 指定。
 
 ## 三、配置向后兼容
 
@@ -73,4 +73,4 @@ pnpm install && pnpm verify # 3. 装依赖（如有新增）并跑检查
 查构建告警：所有兜底行为都会打 `[site.config] ...` 前缀的警告并说明如何恢复默认。
 
 **Q：主题作者（你自己）如何同步？**
-维护者日常在 `dev` 开发，发布时合入 `main` 并推送 GitHub；`theme:update` 同样适用于把 `origin/main` 合回本地分支。
+维护者日常在 `dev` 开发，发布时合入 `main` 并推送 GitHub；`theme:update` 默认从官方 `main` 拉取，同样适用于把上游更新合回本地分支。
